@@ -30,6 +30,8 @@ WebTouch 体系按业务边界划分为五大高内聚领域。每个领域包�
 
 跨越单一领域的全局架构指南与开发者必读材料：
 
+- [贡献指南](contributing.md) · [MIT 许可证](../LICENSE) · [安全政策与私密报告](../SECURITY.md)
+
 - **端点星（Cell-0: WebTouch）领地宪章与双连续体自治规约**：[`cell-0-territory-manifest-and-dual-continuum.md`](cell-0-territory-manifest-and-dual-continuum.md)（状态：`ACTIVE` · 2026-10-03；确立排他写锁、双连续体代际交叠护航、Codex 探马测绘规范与领地盲区字典）
 - **v2.0 物理内核拓扑与感知执行规范 (RFC)**：[`webtouch-v2-architecture-rfc.md`](webtouch-v2-architecture-rfc.md)（状态：`APPROVED(目标态)` · 2026-09-25；消灭假成功水床位移、Isolated World 感知脱壳、AX 穿透寻底与 FD 3/4 管道生命周期强绑定）
 - **Stage 3 演进白皮书（计划事实源 · 2026-09-25）**：[`stage3-adaptive-interaction-engine-plan-2026-09-25.md`](stage3-adaptive-interaction-engine-plan-2026-09-25.md)（用户 `[State: E]` 落盘：阶段一~四、6 大意图族、G-PROOF 矩阵与 `T-3` 阈值表、证伪协议、三类物理暗礁、三项 Bounty、M1~M4；任务与验收登记于 [`../Tasks.md`](../Tasks.md) `T-23`）

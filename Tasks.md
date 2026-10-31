@@ -16,6 +16,11 @@
 
 ## 任务
 
+### `T-OSS` 开源合格化（2026-10-31）
+
+- **状态**：IN_PROGRESS；A：MIT 与安全政策；B：可复现 CI 与贡献指南；C：干净环境证据。完成须以实际 PR、CI 和验证证据为准。
+- **边界**：不改 module 或状态路径，不发 tag/Release；PR #4 独立处理。
+
 ### `T-39` 对外名称从 uws 逐步退役到 webtouch（2026-10-31）
 
 - **范围**：用户可见文档与 CLI 主名改为 `webtouch`。`uws` 保留为同一二进制的弃用别名（stderr 提示）。Makefile 正式产物 `webtouch-engine` / `webtouch-gateway` / `webtouch-lease`，旧文件名为软链。README 去掉本树不存在的 `pipeline/`、`learning/`、`benchmarks/`、`archive/`、`docs/evidence/` 链接，快速开始改走 CLI session。Tasks.md 中的个人邮箱脱敏。
