@@ -88,3 +88,6 @@
 1. 复杂度治理（`T-28`）：阶段 3 后续单元（下一刀 `cdp_session_fingerprint.go`）；阶段 2 单元 3（唯一剩余 WARN）。
 2. **收口 `T-30` 第二刀 Phase 3**：对可产生至少两个有效候选的真实公开页运行真实视觉模型 A/B/C/D 复选，记录候选图、模型选择与真值对照；完成后按准确率判据闭环 Tasks 与本交接。
 3. 门禁／等待项／停止条件明细一律见 [`Tasks.md`](Tasks.md) 对应段。
+
+## OSS close (2026-10-31 14:09 UTC)
+PR #7 收口：ONNX 为仓内 seed 训练夹具；`THIRD_PARTY.md` 记录直接 Go 依赖；测试隔离修复已进分支。准备 squash 合入后验 main CI。

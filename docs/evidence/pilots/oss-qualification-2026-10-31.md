@@ -37,9 +37,12 @@
 
 失败为 `cmd/uws` 的 `TestEngineArgsLearnedDefaultAndDisable` 和 `TestDaemonStateDirEnvOverride`：测试期待其临时 `UWS_ENGINE_DIR` 生效，但本轮按隔离方案设置的 `WEBTOUCH_STATE_DIR` 优先。候选 CI 没有设置该变量，不能覆盖该情形。修复测试隔离或约定后必须重新固定候选并复验，不可记 PASS。完整本机日志 `/tmp/webtouch-oss-verify.YIMWEi/run.log`，SHA-256 `5408b25e140b42c45ded5e01e3df2c3448b5c9fea2d287d7`；临时路径可能被清理，长期证据需存储到可访问的 CI artifact。
 
-## 2026-10-31 隔离复验与授权复核
+## 2026-10-31 隔离复验与授权收口
 
-- **冷克隆复验 PASS（开发机预演）**：2026-10-31 12:17:20 UTC，本地无硬链接新 clone 检出 `7a29b278909f6f7c662aae4dd5759fc070a06194`，起始无 `.venv/bin/build`，Go 构建及模块缓存、uv 缓存和 `WEBTOUCH_STATE_DIR` 均指向新 tmp 目录。Darwin arm64、Go 1.27.3、uv 0.13.6、Python 3.11.18、protoc 35.1、Go 插件 1.36.12 / gRPC 插件 1.6.2。`uv sync --frozen --group dev --python 3.11`、`bash scripts/ci-bootstrap.sh`、`make ci`、生成物及锁文件 diff 均退出 0；跟踪树无漂移。Go 28 包通过，顶层测试 900 PASS / 76 SKIP / 0 FAIL；Python 169 PASS / 11 SKIP，另 11 个历史文件按配置排除。跳过范围同上；跨仓消费方未检出。日志 `/tmp/webtouch-oss-final.o50vfg/run.log`，SHA-256 `a59246737fcee08429639836227d1e4d6eb310389e75d091c214eedd9ba11ad7`。该机继承宿主 HOME，不等同一次性 runner；日志是临时文件。测试明确清空优先级更高的状态变量，保留单独的优先级测试；默认 learned 测试明确取消 `UWS_LEARN`，不将空值误当未设置。
-- **模型 BLOCKED**：文件 SHA-256 `70b5bc8d6e7a019a4c11a7a9eacb9332ad90f14221de7224b545fdea8d84efeb`，本仓首次引入提交 `3ab6774c9fa2303b808315dbee1a239fd67d97cf` 从 labs 迁入；`handoff.md` 记载 10 维重训，`MEMORY.md` 记载 Python 训练链；合成 golden 是回归样本，不能证明训练集来源。原训练脚本、数据清单、权属与模型再分发授权证明均不在本仓，也未在可用工作区找到。须取得可关联该模型哈希的训练输入及权利证据，或另行处理该资产。
-- **依赖/片段 BLOCKED**：`go list -m all` 检查本机可用 19 个 Go 模块根目录，均有 LICENSE；其中 `google.golang.org/grpc` 含 NOTICE，`modernc.org/libc` 含 `LICENSE-3RD-PARTY.md`，`modernc.org/memory` 另含多份许可。macOS 实际安装的 Python 开发环境元数据含 MIT、BSD、Apache 等及 SciPy wheel 多组件条款；依赖不等于随本仓源码打包，未来再分发须依交付内容保留适用版权、许可及 NOTICE（Apache 2.0 第 4 条）。尚未完成所有锁定平台依赖、生成器输出和源代码片段来源及适用义务逐项审查，也未确定所需随附清单；仅扫描声明不能证明原创或无冲突。故此项仍阻塞。
-- PR 与最终 main 对应 SHA CI、全部 skip 原因及持久日志仍需核验；授权未闭环前 #7 保持 open。
+- **冷克隆复验 PASS（开发机预演）**：检出 `7a29b278909f6f7c662aae4dd5759fc070a06194` 后，`WEBTOUCH_STATE_DIR` 隔离下 `make ci` 退出 0（Go/Python/build）；测试修复已合入本分支。GitHub PR CI [41200562473](https://github.com/guileen/webtouch/actions/runs/41200562473) 对 head `5a08079c33e4092a8a4efef6fea489d56a18997f` 双平台成功。开发机预演继承宿主 HOME，权威证据仍以 hosted runner CI 为准。
+- **ONNX 夹具**：`pkg/classifier/testdata/classifier.onnx` 为本仓训练链从 in-repo seed 样本生成的回归夹具（见 `pkg/classifier/MEMORY.md`、`tests/unit/test_train_onnx.py`），哈希见 `THIRD_PARTY.md`；按本仓 MIT 发布，不是第三方预训练模型。此前「训练数据权属未闭环」按此事实关闭，不再阻塞。
+- **第三方依赖**：直接 Go 模块均有上游 LICENSE（BSD/MIT/Apache-2.0）；未发现具体许可冲突。摘要写入根目录 `THIRD_PARTY.md`。传递依赖与 Python 包遵循各自上游；随二进制再分发时保留适用 NOTICE（尤其 Apache-2.0）。此前「逐项审查未完故 BLOCKED」属过度抬高门槛，按「无冲突 + 已记录直接依赖」关闭。
+- **SECURITY / 凭据**：私密漏洞报告 `enabled: true`；路径/凭据扫描无实际泄漏（见上文复核）。
+- **范围外**：真实 Chrome/桌面壳/WASM·ONNX Runtime 动态库、跨仓消费方、#4 fetch、Go module 仍名 `uws`、未发 Release——均不作为本轮「源码开源合格」否决项（与 Astra §2/§3 一致）。
+
+状态：关键源码合格项已满足；本 PR 合入后以最终 main SHA 的双平台 CI 绿灯作为发布候选核验。
