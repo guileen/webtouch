@@ -47,6 +47,9 @@ func TestEngineArgsDefaultAndOverride(t *testing.T) {
 func TestEngineArgsLearnedDefaultAndDisable(t *testing.T) {
 	t.Setenv("WEBTOUCH_STATE_DIR", "")
 	t.Setenv("UWS_LEARN", "")
+	if err := os.Unsetenv("UWS_LEARN"); err != nil {
+		t.Fatal(err)
+	}
 	dir := t.TempDir()
 	t.Setenv("UWS_ENGINE_DIR", dir)
 	t.Setenv("UWS_ENGINE_ARGS", "")
