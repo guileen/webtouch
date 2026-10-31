@@ -9,7 +9,7 @@ import (
 	"uws/pkg/fingerprint"
 )
 
-// uws identity —— 浏览器身份（指纹）注册表与账号绑定（Phase 2，2026-09-12）。
+// webtouch identity —— 浏览器身份（指纹）注册表与账号绑定（Phase 2，2026-09-12）。
 //
 // 用户的原始需求：「哪怕迁移，也要保证浏览器指纹一致；账号和指纹是绑定的；会有多份指纹；
 // 每份指纹要绑自己的 SOCKS5 代理」。这条命令就是那三句话的落点：
@@ -31,7 +31,7 @@ func runIdentity(args []string) error {
 		return identityList(registry)
 	case "show":
 		if len(args) < 2 {
-			return fmt.Errorf("用法: uws identity show <profile-id>")
+			return fmt.Errorf("用法: webtouch identity show <profile-id>")
 		}
 		profile, err := registry.Load(args[1])
 		if err != nil {
@@ -45,7 +45,7 @@ func runIdentity(args []string) error {
 		return nil
 	case "bind":
 		if len(args) < 3 {
-			return fmt.Errorf("用法: uws identity bind <账号> <profile-id>")
+			return fmt.Errorf("用法: webtouch identity bind <账号> <profile-id>")
 		}
 		if err := registry.Bind(args[1], args[2]); err != nil {
 			return err
@@ -54,7 +54,7 @@ func runIdentity(args []string) error {
 		return nil
 	case "unbind":
 		if len(args) < 2 {
-			return fmt.Errorf("用法: uws identity unbind <账号>")
+			return fmt.Errorf("用法: webtouch identity unbind <账号>")
 		}
 		if err := registry.Unbind(args[1]); err != nil {
 			return err
@@ -63,7 +63,7 @@ func runIdentity(args []string) error {
 		return nil
 	case "resolve":
 		if len(args) < 2 {
-			return fmt.Errorf("用法: uws identity resolve <账号>")
+			return fmt.Errorf("用法: webtouch identity resolve <账号>")
 		}
 		profile, err := registry.Resolve(args[1])
 		if err != nil {
@@ -73,7 +73,7 @@ func runIdentity(args []string) error {
 		return nil
 	case "use":
 		if len(args) < 2 {
-			return fmt.Errorf("用法: uws identity use <profile-id>")
+			return fmt.Errorf("用法: webtouch identity use <profile-id>")
 		}
 		profile, err := registry.Load(args[1])
 		if err != nil {
@@ -104,17 +104,17 @@ func runIdentity(args []string) error {
 }
 
 func identityGuide(registry *fingerprint.Registry) string {
-	return fmt.Sprintf(`uws identity —— 浏览器身份（指纹）注册表
+	return fmt.Sprintf(`webtouch identity —— 浏览器身份（指纹）注册表
 
   身份目录: %s（UWS_IDENTITY_ROOT 可覆盖）
 
-  uws identity list                     看有哪些身份（平台/时区/代理/绑了哪个账号）
-  uws identity show <profile-id>        看某份身份的档案（代理凭据脱敏）
-  uws identity bind <账号> <profile-id>  把账号钉在这份身份上（1:1，改绑要先 unbind）
-  uws identity unbind <账号>             解除绑定
-  uws identity resolve <账号>            按账号反查身份，并打印怎么用它跑起来
-  uws identity use <profile-id>          打印可直接执行的运行命令
-  uws identity check                     查共用代理出口 / 悬空绑定
+  webtouch identity list                     看有哪些身份（平台/时区/代理/绑了哪个账号）
+  webtouch identity show <profile-id>        看某份身份的档案（代理凭据脱敏）
+  webtouch identity bind <账号> <profile-id>  把账号钉在这份身份上（1:1，改绑要先 unbind）
+  webtouch identity unbind <账号>             解除绑定
+  webtouch identity resolve <账号>            按账号反查身份，并打印怎么用它跑起来
+  webtouch identity use <profile-id>          打印可直接执行的运行命令
+  webtouch identity check                     查共用代理出口 / 悬空绑定
 
 不变式：一个账号一份身份、一份身份一个账号——两个账号共用同一份指纹，等于直接告诉
 平台「这俩是同一个人」。入口档案是 <profile-id>.json，只放档案、不放绑定。

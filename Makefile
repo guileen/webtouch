@@ -1,5 +1,7 @@
-# UWS 工程入口（骨架阶段：保证可编译、可收集、可运行；实现随里程碑点亮）
+# WebTouch 工程入口（骨架阶段：保证可编译、可收集、可运行；实现随里程碑点亮）
 # 与 docs/contributing.md、docs/tdd-checklist.md §0.3 对齐。
+# 对外命令与正式二进制名是 webtouch / webtouch-engine / webtouch-gateway。
+# uws / uws-engine / uws-gateway 只作为同产物软链（弃用别名）。Go module 路径仍是 uws。
 
 PYTHON ?= .venv/bin/python
 PYTEST ?= $(PYTHON) -m pytest
@@ -7,11 +9,11 @@ GO     ?= go
 CMAKE  ?= cmake
 # ---- 构建/版本（标准化，防孤儿进程 + 源码/进程版本漂移）----
 # VERSION 文件是版本事实源；build 用 -ldflags 把「版本+git sha」注入引擎与 CLI 二进制，
-# 使运行中的 EngineVersion / `uws version` 均可被 `uws daemon status` 的 HealthCheck 核对。
+# 使运行中的 EngineVersion / `webtouch version` 均可被 `webtouch daemon status` 的 HealthCheck 核对。
 VERSION    ?= $(shell cat VERSION 2>/dev/null || echo dev)
 GIT_SHA    ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo nostamp)
 BUILD_INFO  = $(VERSION)+$(GIT_SHA)
-# 引擎包路径 = uws/pkg/engine；CLI main 包注入须用其目录全路径 uws/cmd/uws（不能用 main.*）。
+# 引擎包路径 = uws/pkg/engine（module 名未改）；CLI main 包注入须用其目录全路径 uws/cmd/uws（不能用 main.*）。
 # 网关自身也注入构建标识（apps/gateway.BuildVersion）：/v1/health 的 version 字段 +
 # 启动日志据此可被机器核对，专治「源码新版本 / 进程旧版本」漂移（make gateway-restart）。
 GO_LDFLAGS  = -X uws/pkg/engine.EngineVersion=$(BUILD_INFO) -X uws/cmd/uws.buildVersion=$(BUILD_INFO) -X uws/apps/gateway.BuildVersion=$(BUILD_INFO)
@@ -50,23 +52,28 @@ audit-consumers:
 
 ## 版本+sha 打印（人/CI 可读）
 version:
-	@echo "UWS $(VERSION)  sha=$(GIT_SHA)  build_info=$(BUILD_INFO)"
+	@echo "WebTouch $(VERSION)  sha=$(GIT_SHA)  build_info=$(BUILD_INFO)"
 
-## 标准化构建：产物统一放 bin/ —— bin/webtouch（正式 CLI）+ bin/uws-engine（引擎）+
-## bin/uws-lease（远程 Profile Lease 服务），同一版本+sha；
-## 仓库根 webtouch/uws 是指向 bin/webtouch 的兼容软链（产物均 gitignored）。
+## 标准化构建：产物统一放 bin/。
+## 正式名：bin/webtouch、bin/webtouch-engine、bin/webtouch-gateway、bin/webtouch-lease。
+## 弃用软链：bin/uws-engine、bin/uws-gateway、bin/uws-lease，以及仓库根 webtouch/uws。
+## 源码目录仍是 cmd/uws、cmd/uws-engine、cmd/uws-gateway、cmd/uws-lease。
 ## 注：引擎完整能力还需 `make probe-wasm ort-lib`（WASM 探针 + ONNX 运行时库，均 gitignored）；
-## probe-wasm 已并入 install，保证 uws probe 发布即可用。
+## probe-wasm 已并入 install，保证 webtouch probe 发布即可用。
 build: version
 	@echo "==> 构建引擎、CLI、网关与租约服务（ldflags: $(GO_LDFLAGS)）"
 	mkdir -p bin
-	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/uws-engine ./cmd/uws-engine
-	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/uws-lease ./cmd/uws-lease
-	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/uws-gateway ./cmd/uws-gateway
+	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/webtouch-engine ./cmd/uws-engine
+	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/webtouch-lease ./cmd/uws-lease
+	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/webtouch-gateway ./cmd/uws-gateway
 	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/webtouch ./cmd/uws
+	ln -sfn webtouch-engine bin/uws-engine
+	ln -sfn webtouch-lease bin/uws-lease
+	ln -sfn webtouch-gateway bin/uws-gateway
 	ln -sfn bin/webtouch webtouch
 	ln -sfn bin/webtouch uws
-	ln -sfn bin/uws-gateway uws-gateway
+	ln -sfn bin/webtouch-gateway webtouch-gateway
+	ln -sfn bin/webtouch-gateway uws-gateway
 	@echo "==> 构建完成"
 	./webtouch version
 
@@ -76,9 +83,11 @@ build: version
 install: build probe-wasm
 	ln -sfn $(CURDIR)/bin/webtouch /usr/local/bin/webtouch
 	ln -sfn $(CURDIR)/bin/webtouch /usr/local/bin/uws
-	ln -sfn $(CURDIR)/bin/uws-engine /usr/local/bin/uws-engine
-	ln -sfn $(CURDIR)/bin/uws-gateway /usr/local/bin/uws-gateway
-	@echo "==> 本地 release 完成：/usr/local/bin/{webtouch,uws,uws-engine,uws-gateway} -> $(CURDIR)/bin（含 probe-wasm）"
+	ln -sfn $(CURDIR)/bin/webtouch-engine /usr/local/bin/webtouch-engine
+	ln -sfn $(CURDIR)/bin/webtouch-engine /usr/local/bin/uws-engine
+	ln -sfn $(CURDIR)/bin/webtouch-gateway /usr/local/bin/webtouch-gateway
+	ln -sfn $(CURDIR)/bin/webtouch-gateway /usr/local/bin/uws-gateway
+	@echo "==> 本地 release 完成：/usr/local/bin/{webtouch,uws,webtouch-engine,uws-engine,webtouch-gateway,uws-gateway} -> $(CURDIR)/bin（含 probe-wasm）"
 	./webtouch daemon status
 
 release-local: install
@@ -87,13 +96,17 @@ release-local: install
 engine-restart: build
 	./webtouch daemon restart
 
-## 网关守护进程重建重启：只重建 `bin/uws-gateway`（不碰引擎二进制，避免引擎侧
-## 「二进制新/进程旧」漂移），再 kickstart launchd 托管实例，最后把运行版本打出来
-## 供人/机器核对。改完 `apps/gateway` 就该跑这一条，不要手工只换二进制不重启。
+## 网关守护进程重建重启：只重建 `bin/webtouch-gateway`（不碰引擎二进制，避免引擎侧
+## 「二进制新/进程旧」漂移），再刷新兼容软链，kickstart launchd 托管实例（label 仍是
+## com.guileen.uws-gateway），最后把运行版本打出来供人/机器核对。
+## 改完 `apps/gateway` 就该跑这一条，不要手工只换二进制不重启。
 gateway-restart: version
 	@echo "==> 重建网关（ldflags: $(GO_LDFLAGS)）"
 	mkdir -p bin
-	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/uws-gateway ./cmd/uws-gateway
+	$(GO) build -ldflags "$(GO_LDFLAGS)" -o bin/webtouch-gateway ./cmd/uws-gateway
+	ln -sfn webtouch-gateway bin/uws-gateway
+	ln -sfn bin/webtouch-gateway webtouch-gateway
+	ln -sfn bin/webtouch-gateway uws-gateway
 	launchctl kickstart -k gui/$$(id -u)/com.guileen.uws-gateway
 	@for i in 1 2 3 4 5; do \
 	  curl -fsS http://127.0.0.1:8000/v1/health >/dev/null 2>&1 && break; \
@@ -145,7 +158,7 @@ lint:
 	@echo "TODO(M2+): ruff check + ruff format --check + mypy + clang-format"
 
 ## 分层边界审计：核心禁止反向依赖应用层（Go：apps/gateway；Python：coordinator/app）。
-## Go 侧查 pkg/* 与 cmd/uws*（核心/界面）是否 import 网关应用包；
+## Go 侧查 pkg/* 与 cmd/uws*（核心/界面；目录名仍是 uws）是否 import 网关应用包；
 ## 应用层（apps/）禁止直接 import 浏览器内核 pkg/browser——跨层接口定义在 pkg/contract；
 ## Python 侧查 coordinator 根级模块（除 cli.py 组合根外）是否 import coordinator.app。
 ## 实现移到 scripts/audit-layers.sh：旧内联版把 rg 的“无匹配(1)”和“扫描失败(>=2)”

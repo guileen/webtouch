@@ -1,6 +1,6 @@
 # WebTouch 任务书（Tasks）
 
-> **状态**：`ACTIVE`；更新：2026-09-30 11:53（系统时钟 `date`）。
+> **状态**：`ACTIVE`；更新：2026-10-31（系统时钟 `date`；本轮登记 `T-39`）。
 > **定位**：唯一任务与验收事实源——任务、依赖、验收判据、状态、停止条件。目标与红线 → [`Goals.md`](Goals.md)；当前状态与证据指针 → [`handoff.md`](handoff.md)；验收标准唯一索引 → [`docs/tdd-checklist.md`](docs/tdd-checklist.md)；五大领域活规范地图 → [`docs/README.md`](docs/README.md) 一；核心决策索引 → [`GLOBAL.md`](GLOBAL.md) §4。
 > **纪律**：任务即上下文（目标 / 范围 / 依赖 / 停止线 / 验收 / 证据落点一起写）；同一 todo 不在两处勾选；完成必须回写证据；状态只用 `NOT_STARTED / IN_PROGRESS / BLOCKED / DONE / NOT_APPROVED`。
 
@@ -15,6 +15,13 @@
 | G-QA QA Studio 首单 | `HOLD` | `DRY` 切片 2（真实 Runner）闭合；`PAID-CONCIERGE` CJR-01~13；`PUBLIC`（现状见 `.mem/handoff.md`） |
 
 ## 任务
+
+### `T-39` 对外名称从 uws 逐步退役到 webtouch（2026-10-31）
+
+- **范围**：用户可见文档与 CLI 主名改为 `webtouch`。`uws` 保留为同一二进制的弃用别名（stderr 提示）。Makefile 正式产物 `webtouch-engine` / `webtouch-gateway` / `webtouch-lease`，旧文件名为软链。README 去掉本树不存在的 `pipeline/`、`learning/`、`benchmarks/`、`archive/`、`docs/evidence/` 链接，快速开始改走 CLI session。Tasks.md 中的个人邮箱脱敏。
+- **不做**：不改 Go module `uws`；不搬 `~/.uws` 与 `~/.uws-chrome-debug`；不改 proto 包名 `uws.v1`、launchd label、`UWS_*` 环境变量名（只加同义覆盖）；不改历史任务流水里的旧命令记录。
+- **验收**：`go test ./pkg/clisession ./cmd/uws ./apps/gateway -count=1`；`pytest tests/unit/test_cli.py -q`。契约 [`docs/cli-session-contract-2026-10-31.md`](docs/cli-session-contract-2026-10-31.md) §8，决策 [`GLOBAL.md`](GLOBAL.md) #133。
+- **状态**：`DONE`（本切片）。Follow-up：module path、状态目录显式迁移命令、`cmd/uws*` 目录改名。
 
 ### `T-38` CLI 对外契约与本机 session lease（2026-10-31）
 
@@ -759,7 +766,7 @@
   - **凭据与签名（SOP 第 4 条定性）**：全部 `backend-api` 调用带 `Authorization: Bearer <JWT access token>`（OAuth access token，实测可由页内 `GET /api/auth/session` 的 `accessToken` 取到，长 2101）；另随请求带 `OAI-Language` 等。**签名器＝站点自带**（sentinel prepare/finalize 两步 + 页内 JS 挑战），按 §13 走 `request.signer`／页内直发，**令牌与挑战串一律不落 recipe 文本**。
   - **会话身份（SOP 第 7 条）**：对话页＝`https://chatgpt.com/c/<uuid>`（本轮实测坐实，此前为「待测」，测后 URL 自己变成 `/c/6abf5d65-…`）；列表端点＝`GET /backend-api/conversations?is_archived=false&is_starred=false&limit=30&order=updated&offset=0`（带 Bearer；实测 `total=31`、`items[].id/title`）。
   - **清账落点（SOP 第 8 条，部分）**：UI 路径＝侧栏行「聊天操作 → 删除 → 删除聊天」二次确认；**删后服务端复核通过**（同一列表端点再读：`total=31`、`items` 不含该 id；DOM 侧栏同步消失、URL 回落 `/`）⇒ 测试对话 `6abf5d65-8c84-83ed-a7bb-6cd5f5d73aa2`（「只回答两个字：收到」）**已删净、零残留**。**未坐实**＝删除请求的端点与体（页面级 `Network` 事件与 `performance` 资源时序都没抓到它，Service Worker 目标亦不存在，疑经站点自有 fetch 封装/其他通道）⇒ 端点待补抓，本项**不得**按「已知」引用。
-  - **顺手读数（非阻塞）**：页内侧栏当时显示「剩余 2% 使用量 / 重置频率 every 1 weeks / 下次重置 10 月 4 日 01:16」，账号＝`guileen@gmail.com`（`plan_type: plus`，UI 写作 Pro）。**后续步骤（第 4–10 条的两态自证、回放）还会再消耗该额度**，已按此提示用户。
+  - **顺手读数（非阻塞）**：页内侧栏当时显示「剩余 2% 使用量 / 重置频率 every 1 weeks / 下次重置 10 月 4 日 01:16」，账号邮箱已从任务书移除（`plan_type: plus`，UI 写作 Pro）。**后续步骤（第 4–10 条的两态自证、回放）还会再消耗该额度**，已按此提示用户。
 
 - **ChatGPT 第 5／6／8 条取证完成（2026-10-02 16:2x–16:5x，真机；测试会话 `6abf69c1-…` 已删净并复核）**：案卷＝[`docs/evidence/pilots/chatgpt-two-state-and-response-framing-2026-10-02.md`](docs/evidence/pilots/chatgpt-two-state-and-response-framing-2026-10-02.md)（脱敏）。四条要点——
   - **第 5 条·两态（字段级）**：首轮 `parent_message_id:"client-created-root"` 且**无 `conversation_id` 字段**、message `id`／`create_time` 客户端自铸；续轮加 `conversation_id` ＋ `parent_message_id`＝上一轮助手消息 id（实测 `607558c1-…`）⇒ 两态 diff 只此三处。**`prepare` 带回的父 id 与主请求不一致**（`4f698990-…` vs `607558c1-…`）⇒ 直发不得取 prepare 的 id。

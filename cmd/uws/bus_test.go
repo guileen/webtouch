@@ -35,10 +35,13 @@ func TestBusEnv(t *testing.T) {
 
 func TestBusGuide(t *testing.T) {
 	guide := busGuide()
-	if !strings.Contains(guide, "uws bus status") {
-		t.Errorf("guide 应包含 uws bus status")
+	if !strings.Contains(guide, "webtouch bus status") {
+		t.Errorf("guide 应包含 webtouch bus status")
 	}
-	if !strings.Contains(guide, "uws bus env") {
-		t.Errorf("guide 应包含 uws bus env")
+	if !strings.Contains(guide, "webtouch bus env") {
+		t.Errorf("guide 应包含 webtouch bus env")
+	}
+	if !strings.Contains(guide, "uws bus status") {
+		t.Errorf("guide 应标明弃用别名 uws bus status")
 	}
 }

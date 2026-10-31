@@ -1,4 +1,4 @@
-// uws chat —— UWS 默认推荐入口（2026-09-03 用户定案）。
+// webtouch chat —— UWS 默认推荐入口（2026-09-03 用户定案）。
 //
 // 两种模式自动分流：
 //  1. 目标模式（默认）：只给一句自然语言目标（不传 --img/--url/--page/--diff 等视觉参数）
@@ -7,16 +7,16 @@
 //     等用户，结束输出状态 + 当前页（URL/AXTree/截图）。
 //  2. 义眼模式：显式给视觉输入（--img 对图 / --url 站点截图 / --page 当前页 / --diff 等）
 //     → 视觉模型作为体验评审者返回判断（是否一致/满足需求/差异），不执行页面动作。
-//     `uws chat "判断两个实现是否一致" --img a.png --img b.png`
-//     `uws chat "对比这两个站点主屏" --url https://a.example --url https://b.example`
-//     `uws -p "两个实现是否一致" --img a.png --img b.png   # -p 是 chat 的顶层别名
+//     `webtouch chat "判断两个实现是否一致" --img a.png --img b.png`
+//     `webtouch chat "对比这两个站点主屏" --url https://a.example --url https://b.example`
+//     `webtouch -p "两个实现是否一致" --img a.png --img b.png   # -p 是 chat 的顶层别名
 //
 // 用法：
 //
-//	uws "发布微博：今天天气不错"                 # 目标模式（最短写法，等价 uws chat/uws -p）
-//	uws chat "把 a.com 的标题改成 xxx 后截图给我看"
-//	uws chat "判断两个实现是否一致" --img ref.png --img clone.png
-//	uws -p "参考站 vs 我们的实现，按钮位置是否一致" --img ref.png --img clone.png --json
+//	webtouch "发布微博：今天天气不错"                 # 目标模式（最短写法，等价 webtouch chat/uws -p）
+//	webtouch chat "把 a.com 的标题改成 xxx 后截图给我看"
+//	webtouch chat "判断两个实现是否一致" --img ref.png --img clone.png
+//	webtouch -p "参考站 vs 我们的实现，按钮位置是否一致" --img ref.png --img clone.png --json
 package main
 
 import (
@@ -40,7 +40,7 @@ import (
 	uwspb "uws/proto/gen/go/proto/v1"
 )
 
-// chatOptions 是 uws chat 的解析后参数。
+// chatOptions 是 webtouch chat 的解析后参数。
 type chatOptions struct {
 	question    string
 	imageSrcs   []string // --img（本地路径/URL，runChat 里再 chatLoadImage）
@@ -61,7 +61,7 @@ type chatOptions struct {
 	debug       bool   // --debug：目标模式逐轮打印 VLM 中间过程（委派 goal --debug）
 }
 
-// runChat 处理 `uws chat ...` 与顶层 `-p/--prompt ...`。
+// runChat 处理 `webtouch chat ...` 与顶层 `-p/--prompt ...`。
 func runChat(args []string) error {
 	opts, err := parseChatArgs(args)
 	if err != nil {
@@ -113,7 +113,7 @@ func runChat(args []string) error {
 		imgs = append(imgs, shot)
 	}
 	if len(imgs) == 0 {
-		return errors.New("chat: 未提供任何视觉输入（用 --img 给图，--url 给站点，或不传参数让 uws 截当前页面）")
+		return errors.New("chat: 未提供任何视觉输入（用 --img 给图，--url 给站点，或不传参数让 webtouch 截当前页面）")
 	}
 
 	// 自然语言自决：对比类问题自动启用像素 diff 证据（确定性差异图+统计），不依赖显式 --diff。
@@ -212,7 +212,7 @@ func runGoalMode(opts chatOptions) error {
 
 // saveEyeImages 把 imgs 中带字节数据的图片写入 outDir（自动创建目录）。
 // 文件名用「序号-标签」安全化；仅保留本地字节图（远程 URL 透传的无 Data 跳过）。
-// 返回写盘数量；用于让 `uws chat --out-dir` 的证据可回看。
+// 返回写盘数量；用于让 `webtouch chat --out-dir` 的证据可回看。
 func saveEyeImages(outDir string, imgs []vlm.EyeImage) error {
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		return fmt.Errorf("chat: 创建证据目录 %q: %w", outDir, err)
@@ -360,7 +360,7 @@ func parseChatArgs(args []string) (chatOptions, error) {
 		case strings.HasPrefix(a, "-"):
 			return opts, fmt.Errorf("chat: 未知参数 %q（支持 --img/--url/--page/--json/--plain/--model/--timeout/--debug 等）", a)
 		default:
-			// 非 flag 视为问题的一部分；多个分词拼接（如直接 `uws chat "a" "b"`）。
+			// 非 flag 视为问题的一部分；多个分词拼接（如直接 `webtouch chat "a" "b"`）。
 			if a != "-" {
 				questionParts = append(questionParts, a)
 			}
@@ -368,7 +368,7 @@ func parseChatArgs(args []string) (chatOptions, error) {
 	}
 	opts.question = strings.Join(questionParts, " ")
 	if strings.TrimSpace(opts.question) == "" && len(opts.imageSrcs) == 0 && len(opts.urls) == 0 && !opts.usePage {
-		return opts, errors.New("chat: 请给出问题（如 `uws chat \"判断两个实现是否一致\" --img a.png --img b.png`）")
+		return opts, errors.New("chat: 请给出问题（如 `webtouch chat \"判断两个实现是否一致\" --img a.png --img b.png`）")
 	}
 	return opts, nil
 }
@@ -442,7 +442,7 @@ var settleHeavyKeywords = []string{
 func chatCaptureURLs(ctx context.Context, opts chatOptions) ([]vlm.EyeImage, error) {
 	conn, err := dialEngine(ctx, opts.engineAddr)
 	if err != nil {
-		return nil, fmt.Errorf("chat: 打开站点需要引擎在运行（%s，先 `uws daemon start`）; 失败: %w", opts.engineAddr, err)
+		return nil, fmt.Errorf("chat: 打开站点需要引擎在运行（%s，先 `webtouch daemon start`）; 失败: %w", opts.engineAddr, err)
 	}
 	defer conn.Close()
 	stub := uwspb.NewUwsEngineClient(conn)
@@ -492,7 +492,7 @@ func chatViewport(opts chatOptions) *uwspb.ViewportConfig {
 func chatCapturePage(ctx context.Context, opts chatOptions) (vlm.EyeImage, error) {
 	conn, err := dialEngine(ctx, opts.engineAddr)
 	if err != nil {
-		return vlm.EyeImage{}, fmt.Errorf("chat: 截取页面需要引擎在运行（%s，先 `uws daemon start`）; 失败: %w", opts.engineAddr, err)
+		return vlm.EyeImage{}, fmt.Errorf("chat: 截取页面需要引擎在运行（%s，先 `webtouch daemon start`）; 失败: %w", opts.engineAddr, err)
 	}
 	defer conn.Close()
 	stub := uwspb.NewUwsEngineClient(conn)

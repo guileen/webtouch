@@ -44,17 +44,17 @@ func runState(args []string) error {
 }
 
 func stateGuide() string {
-	return `uws state —— State Bundle 会话迁移
+	return `webtouch state —— State Bundle 会话迁移
 
-  uws state export <profile-id> <origin> --target-id <id> --out <bundle.json> [--key-file <32-byte-key>]
-  uws state inspect <bundle.json> [--key-file <32-byte-key>]
-  uws state import <bundle.json> --target-id <clean-id> [--key-file <32-byte-key>]
-  uws state restore <bundle.json> --profile-file <FingerprintProfile.json> --session <new-session> [--key-file <32-byte-key>]
+  webtouch state export <profile-id> <origin> --target-id <id> --out <bundle.json> [--key-file <32-byte-key>]
+  webtouch state inspect <bundle.json> [--key-file <32-byte-key>]
+  webtouch state import <bundle.json> --target-id <clean-id> [--key-file <32-byte-key>]
+  webtouch state restore <bundle.json> --profile-file <FingerprintProfile.json> --session <new-session> [--key-file <32-byte-key>]
 
 流程：源端登录完成后 export；把文件与密钥通过你认可的安全通道传到目标端；目标端以同一
 FingerprintProfile 初始化一个尚未导航的干净上下文，然后 import，最后才导航到站点。restore
 把“初始化 + 导入”合成一条命令；它默认拒绝已有数据的本地 Profile，随后用同一 --session
-的 uws run/goal 继续。仅在你已核对旧数据时才可显式追加 --allow-existing-profile。
+的 webtouch run/goal 继续。仅在你已核对旧数据时才可显式追加 --allow-existing-profile。
 
 --key-file 是一个权限受控的文件，内容只能是 32 个原始字节或 64 位十六进制 AES-256 密钥。
 不提供它会导出明文 JSON（仅适合受控的临时本地环境）。命令不会打印 Cookie、Bundle 内容或密钥。
@@ -140,7 +140,7 @@ func stateExport(args []string) error {
 		return err
 	}
 	if len(positional) != 2 {
-		return fmt.Errorf("用法: uws state export <profile-id> <origin> --target-id <id> --out <bundle.json> [--key-file <key>]")
+		return fmt.Errorf("用法: webtouch state export <profile-id> <origin> --target-id <id> --out <bundle.json> [--key-file <key>]")
 	}
 	if opts.targetID == "" {
 		return fmt.Errorf("state export: 必须提供 --target-id（InitializeContext 返回的 target_id）")
@@ -196,7 +196,7 @@ func stateImport(args []string) error {
 		return err
 	}
 	if len(positional) != 1 {
-		return fmt.Errorf("用法: uws state import <bundle.json> --target-id <clean-id> [--key-file <key>]")
+		return fmt.Errorf("用法: webtouch state import <bundle.json> --target-id <clean-id> [--key-file <key>]")
 	}
 	if opts.targetID == "" {
 		return fmt.Errorf("state import: 必须提供 --target-id（已初始化、尚未导航的干净上下文）")
@@ -237,7 +237,7 @@ func stateRestore(args []string) error {
 		return err
 	}
 	if len(positional) != 1 || opts.profileFile == "" || opts.session == "" {
-		return fmt.Errorf("用法: uws state restore <bundle.json> --profile-file <FingerprintProfile.json> --session <new-session> [--key-file <key>]")
+		return fmt.Errorf("用法: webtouch state restore <bundle.json> --profile-file <FingerprintProfile.json> --session <new-session> [--key-file <key>]")
 	}
 	bundle, _, err := readStateBundle(positional[0], opts.keyFile)
 	if err != nil {
@@ -320,7 +320,7 @@ func stateInspect(args []string) error {
 		return err
 	}
 	if len(positional) != 1 {
-		return fmt.Errorf("用法: uws state inspect <bundle.json> [--key-file <key>]")
+		return fmt.Errorf("用法: webtouch state inspect <bundle.json> [--key-file <key>]")
 	}
 	bundle, encrypted, err := readStateBundle(positional[0], opts.keyFile)
 	if err != nil {

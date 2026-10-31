@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// runBus 处理 `uws bus` / `webtouch bus` 相关的总线管理与环境注入命令。
+// runBus 处理 `webtouch bus`（弃用别名 `uws bus`）的总线管理与环境注入命令。
 func runBus(args []string) error {
 	if len(args) == 0 {
 		return busStatus()
@@ -29,14 +29,16 @@ func runBus(args []string) error {
 }
 
 func busGuide() string {
-	return `uws bus —— WebTouch 浏览器执行服务管理
+	return `webtouch bus —— WebTouch 浏览器执行服务管理
 
 用法:
-  uws bus status               查看浏览器运行时（Chrome 9222 / 引擎 50051 / WebTouch 服务 8000）与活跃会话
-  uws bus env [--eval]         输出 Agent Hub 客户端模型 API 环境变量（支持 eval $(uws bus env)）
+  webtouch bus status               查看浏览器运行时（Chrome 9222 / 引擎 50051 / WebTouch 服务 8000）与活跃会话
+  webtouch bus env [--eval]         输出 Agent Hub 客户端模型 API 环境变量（支持 eval $(webtouch bus env)）
 
 示例:
-  eval $(uws bus env)          在当前 Shell 把 OpenAI SDK 指向 Agent Hub
+  eval $(webtouch bus env)          在当前 Shell 把 OpenAI SDK 指向 Agent Hub
+
+弃用别名：uws bus status / uws bus env（同一二进制）。
 `
 }
 
@@ -87,7 +89,7 @@ func busStatus() error {
 	if engineLive {
 		fmt.Printf("✓ 物理执行引擎 (gRPC :50051) : 运行中\n")
 	} else {
-		fmt.Printf("✗ 物理执行引擎 (gRPC :50051) : 未检测到监听 (可运行 `uws daemon start`)\n")
+		fmt.Printf("✗ 物理执行引擎 (gRPC :50051) : 未检测到监听 (可运行 `webtouch daemon start`)\n")
 	}
 
 	// 3. 探测 HTTP 网关端口
@@ -101,7 +103,7 @@ func busStatus() error {
 		fmt.Printf("✗ 浏览器执行服务 (HTTP :8000) : 未检测到监听 (可运行 `./scripts/start_bus.sh` 一键拉起)\n")
 	}
 
-	fmt.Println("\n提示: 模型 API 由 Agent Hub 提供；可用 `uws bus env` 获取客户端地址。")
+	fmt.Println("\n提示: 模型 API 由 Agent Hub 提供；可用 `webtouch bus env` 获取客户端地址。")
 	return nil
 }
 

@@ -1,5 +1,5 @@
-// Command uws 是面向用户/Agent 的 CLI 入口（run / crawl / parse-warc / api / search / config）。
-// 自解释优先：`uws help`（或直接 `uws`）返回 skill 友好指南（agentGuide），
+// Command webtouch 是面向用户/Agent 的 CLI 入口（run / crawl / parse-warc / api / search / config）。
+// 自解释优先：`webtouch help`（或直接 `webtouch`）返回 skill 友好指南（agentGuide），
 // 错误回落 agent 友好提示，让 Agent 无需通读大段 SKILL 就能自助排障。
 package main
 
@@ -9,12 +9,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 //go:embed agent-guide.md
 var agentGuideText string
 
 func main() {
+	if msg := deprecatedAliasNotice(os.Args[0]); msg != "" {
+		fmt.Fprint(os.Stderr, msg)
+	}
 	args := os.Args[1:]
 	prog := filepath.Base(os.Args[0])
 	// 无参 / help / -h / --help：技能友好指南，Agent 可直接消费。
@@ -131,7 +135,7 @@ func main() {
 		}
 	default:
 		// 2026-09-03：无子命令时第一个非命令词 = chat 目标文本（推荐最短写法），
-		// 例如 `uws "发布微博：xxx"` / `uws "看看 x.com"`；等价 `uws chat "<文本>"`。
+		// 例如 `webtouch "发布微博：xxx"` / `webtouch "看看 x.com"`；等价 `webtouch chat "<文本>"`。
 		if err := runChat(args); err != nil {
 			fmt.Fprintln(os.Stderr, prog+": "+err.Error())
 			os.Exit(1)
@@ -140,7 +144,7 @@ func main() {
 }
 
 // wrapPromptArgs 把顶层 `-p/--prompt "问题"` 归一为 `chat "问题"` 形参，
-// 便于与 `uws chat ...` 共享解析逻辑。
+// 便于与 `webtouch chat ...` 共享解析逻辑。
 func wrapPromptArgs(args []string) []string {
 	if len(args) == 0 {
 		return args
@@ -155,36 +159,46 @@ func wrapPromptArgs(args []string) []string {
 	}
 }
 
+// deprecatedAliasNotice 在 argv0 仍是弃用名 uws 时返回一行 stderr 提示。
+// 正式入口 webtouch 不提示。提示只走 stderr，避免污染 session 的 stdout JSON。
+func deprecatedAliasNotice(argv0 string) string {
+	base := strings.TrimSuffix(filepath.Base(argv0), ".exe")
+	if base == "uws" {
+		return "注意: 命令名 uws 已弃用，请改用 webtouch（同一二进制）。\n"
+	}
+	return ""
+}
+
 func usage() {
-	fmt.Fprintln(os.Stderr, `uws — Universal Web Surrogate 命令行工具
+	fmt.Fprintln(os.Stderr, `webtouch — WebTouch 命令行（uws 为弃用别名，同一二进制）
 
 用法:
-  uws "目标文本"                推荐入口（= chat 目标模式）：一句自然语言目标，
+  webtouch "目标文本"                推荐入口（= chat 目标模式）：一句自然语言目标，
                                 VLM 自决执行；登录/付费处停下等你；结束给状态和页面
                                 （DSL 语法有效自动走确定性 run --plan）
-  uws chat "目标" --img <图>    义眼模式：看图/对比/评审（显式视觉输入时自动分流）
-  uws config set <key> <value>   持久化配置到 ~/.uws/config.yaml（api_key 不打印明文）
-  uws daemon <start|stop|restart|status>   直接管理引擎守护进程（默认 127.0.0.1:50051）
-  uws run --plan "<DSL>"         确定性 DSL（熟悉目标站点后的自动化；语法有效也会被目标模式自动路由）
-  uws crawl --depth 2 ...        在线智能爬虫（python3 -m coordinator.cli crawl ...）
-  uws explore <url> ...          启发式探索站点，生成导航图/功能报告（python3 -m coordinator.cli explore ...）
-  uws probe [--url <URL>] ...    附着持久调试 Chrome 快照：AXTree + 截图 → Markdown 报告
-  uws parse-warc <file> ...      离线 WARC 解析（python3 -m coordinator.cli parse-warc ...）
-  uws api [start|status|help]   浏览器执行服务（迁移期；对外契约是 CLI，见 session）
-  uws session create|use|show|list|close
+  webtouch chat "目标" --img <图>    义眼模式：看图/对比/评审（显式视觉输入时自动分流）
+  webtouch config set <key> <value>   持久化配置到 ~/.uws/config.yaml（api_key 不打印明文）
+  webtouch daemon <start|stop|restart|status>   直接管理引擎守护进程（默认 127.0.0.1:50051）
+  webtouch run --plan "<DSL>"         确定性 DSL（熟悉目标站点后的自动化；语法有效也会被目标模式自动路由）
+  webtouch crawl --depth 2 ...        在线智能爬虫（python3 -m coordinator.cli crawl ...）
+  webtouch explore <url> ...          启发式探索站点，生成导航图/功能报告（python3 -m coordinator.cli explore ...）
+  webtouch probe [--url <URL>] ...    附着持久调试 Chrome 快照：AXTree + 截图 → Markdown 报告
+  webtouch parse-warc <file> ...      离线 WARC 解析（python3 -m coordinator.cli parse-warc ...）
+  webtouch api [start|status|help]   浏览器执行服务（迁移期；对外契约是 CLI，见 session）
+  webtouch session create|use|show|list|close
                                  本机 session 生命周期（stdout JSON；--session 复用句柄）
-  uws qa --url <url> [选项]     前端交付验收工作台（多视口物理体检、洋红高亮 Diff 与交付验收单）
-  uws commander --tree-file ...  混合指挥：AXTree → VLM 指挥官 → DSL 步骤（node: 引用）
-  uws chat "问题" --img <图> ... 义眼评审（返回结构化判断）；-p/--prompt 是顶层别名
-  uws search --corpus <dir> ...  CC 语料本地检索（python3 -m coordinator.cli search ...）
-	  uws cc-fetch --crawl ... ...   CC WET 语料下载（python3 -m coordinator.cli cc-fetch ...）`)
+  webtouch qa --url <url> [选项]     前端交付验收工作台（多视口物理体检、洋红高亮 Diff 与交付验收单）
+  webtouch commander --tree-file ...  混合指挥：AXTree → VLM 指挥官 → DSL 步骤（node: 引用）
+  webtouch chat "问题" --img <图> ... 义眼评审（返回结构化判断）；-p/--prompt 是顶层别名
+  webtouch search --corpus <dir> ...  CC 语料本地检索（python3 -m coordinator.cli search ...）
+	  webtouch cc-fetch --crawl ... ...   CC WET 语料下载（python3 -m coordinator.cli cc-fetch ...）`)
 }
 
 // runCoordinator 处理需要引擎的子命令：先确保引擎就绪（按需拉起），再把控制交给 Python 协调器。
 func runCoordinator(args []string) error {
 	addr := coordinatorEngineAddr(args)
 	if err := ensureEngine(addr); err != nil {
-		fmt.Fprintln(os.Stderr, "提示: 运行 `uws daemon status` 查看引擎状态，或 `uws daemon start` 手动拉起。")
+		fmt.Fprintln(os.Stderr, "提示: 运行 `webtouch daemon status` 查看引擎状态，或 `webtouch daemon start` 手动拉起。")
 		return err
 	}
 	if err := execCoordinator(args); err != nil {

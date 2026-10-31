@@ -29,7 +29,7 @@ func runRequest(args []string) error {
 		return err
 	}
 	if len(positional) != 1 || options.profileFile == "" {
-		return fmt.Errorf("用法: uws request <url> --profile-file <FingerprintProfile.json> [--state <bundle.json> --key-file <key>] [--method GET] [--header 'Name: value'] [--body <text>|--body-file <path>]")
+		return fmt.Errorf("用法: webtouch request <url> --profile-file <FingerprintProfile.json> [--state <bundle.json> --key-file <key>] [--method GET] [--header 'Name: value'] [--body <text>|--body-file <path>]")
 	}
 	endpoint, err := url.Parse(positional[0])
 	if err != nil || (endpoint.Scheme != "http" && endpoint.Scheme != "https") || endpoint.Host == "" {
@@ -238,9 +238,9 @@ func parseRequestHeader(raw string) (string, string, error) {
 }
 
 func requestGuide() string {
-	return `uws request —— 带同一身份的纯 HTTP 请求
+	return `webtouch request —— 带同一身份的纯 HTTP 请求
 
-  uws request <url> --profile-file <FingerprintProfile.json> [--state <StateBundle.json> --key-file <key>]
+  webtouch request <url> --profile-file <FingerprintProfile.json> [--state <StateBundle.json> --key-file <key>]
               [--method GET] [--header 'Name: value'] [--body <text>|--body-file <path>]
               [--client-hints none|low|full] [--follow] [--out <response-file>]
 

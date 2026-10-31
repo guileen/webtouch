@@ -55,11 +55,11 @@ func runQA(args []string) error {
 	}
 
 	if urlRaw == "" {
-		// 允许直接传入裸 URL 作为首个非 flag 参数：`uws qa http://localhost:3000`
+		// 允许直接传入裸 URL 作为首个非 flag 参数：`webtouch qa http://localhost:3000`
 		if fs.NArg() > 0 && (strings.HasPrefix(fs.Arg(0), "http://") || strings.HasPrefix(fs.Arg(0), "https://")) {
 			urlRaw = fs.Arg(0)
 		} else {
-			return errors.New("缺少必填参数 --url <preview_url>（例如: uws qa --url http://localhost:3000）")
+			return errors.New("缺少必填参数 --url <preview_url>（例如: webtouch qa --url http://localhost:3000）")
 		}
 	}
 
@@ -197,11 +197,11 @@ func printSummaryCard(r *qa.QAReport) {
 }
 
 func qaHelp() string {
-	return `uws qa —— WebTouch QA Studio 前端多端交付验收工作台
+	return `webtouch qa —— WebTouch QA Studio 前端多端交付验收工作台
 
 用法:
-  uws qa --url <preview_url> [选项]
-  uws qa <preview_url> [选项]
+  webtouch qa --url <preview_url> [选项]
+  webtouch qa <preview_url> [选项]
 
 选项:
   --url <url>              待体检的前端页面 URL（例如 http://localhost:3000）
@@ -215,12 +215,12 @@ func qaHelp() string {
 
 示例:
   # 1. 零配置 10 秒快速多端体检（扫除溢出、控制台异常与裂图）
-  uws qa --url http://localhost:3000
+  webtouch qa --url http://localhost:3000
 
   # 2. 视觉基准比对体检（与 Figma 设计稿执行洋红高亮 Diff）
-  uws qa --url http://localhost:3000 --ref-img figma.png
+  webtouch qa --url http://localhost:3000 --ref-img figma.png
 
   # 3. 指定输出目录与自定义多视口
-  uws qa --url http://localhost:3000 --viewports 390,768,1440 --output dist/qa
+  webtouch qa --url http://localhost:3000 --viewports 390,768,1440 --output dist/qa
 `
 }

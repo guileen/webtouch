@@ -45,7 +45,7 @@ func runInspect(args []string) error {
 		return err
 	}
 
-	// 允许直接传入 bare URL: `uws inspect http://localhost:3000`
+	// 允许直接传入 bare URL: `webtouch inspect http://localhost:3000`
 	if urlRaw == "" && fs.NArg() > 0 && (strings.HasPrefix(fs.Arg(0), "http://") || strings.HasPrefix(fs.Arg(0), "https://")) {
 		urlRaw = fs.Arg(0)
 	}
