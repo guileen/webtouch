@@ -1,6 +1,6 @@
 # WebTouch 贡献者指南
 
-欢迎参与 WebTouch (Universal Web Surrogate) 建设！本文档指导如何搭建环境、开发模块、遵循规范并提交变更。
+欢迎参与 WebTouch 建设。命令主名是 `webtouch`（`uws` 为弃用别名）。本文档指导如何搭建环境、开发模块、遵循规范并提交变更。
 
 ---
 
@@ -25,10 +25,9 @@ make test       # 运行基础单元测试
 ## 2. 目录结构与模块边界
 
 > ⚠️ 早期目录按「在线执行环 `engine/` / 离线蒸馏环 `pipeline/`」划分，与当前仓库
-> 实际结构不一致（`engine/` 已并入 `pkg/engine`，另有 `pkg/{gateway,knowledge,vlm}`、
-> `learning/`、`cmd/uws-gateway` 等）。**当前目录结构与五大子域划分以
-> [`README.md`](README.md) 为唯一事实源**；历史分层演进参考见
-> [`evidence/archive/web-touch-architecture-2026-09-02.md`](evidence/archive/web-touch-architecture-2026-09-02.md)。
+> 实际结构不一致（`engine/` 已并入 `pkg/engine`；网关源码在 `cmd/uws-gateway`，
+> 二进制名是 `webtouch-gateway`）。`pipeline/`、`learning/` 与历史架构稿不在本仓库树内。
+> **当前目录结构以 [`README.md`](../README.md) 为准**，领域地图以 [`README.md`](README.md) 为准。
 
 **模块边界与资源约束**：
 - **内核层（`pkg/browser`、`pkg/verifier`、`pkg/probe_wasm` 等）**：严格控制依赖，

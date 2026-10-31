@@ -94,7 +94,7 @@ func runStudio(args []string) error {
 }
 
 func studioHelp() string {
-	return `用法: uws studio [flags]
+	return `用法: webtouch studio [flags]
 
 启动 WebTouch 云端 Web 交互控制面与流式远程伴生视窗服务。
 提供交付看板（Figma 级 Diff、横向溢出瀑布流）与低延迟 WebSocket 流式画布逆向交互接管。
@@ -105,7 +105,7 @@ func studioHelp() string {
                        指定 UWS Engine gRPC 调度地址（默认自动探测）
 
 示例:
-  uws studio                       # 默认在 http://127.0.0.1:8080 启动控制台
-  uws studio --port 9090           # 指定端口 9090
+  webtouch studio                       # 默认在 http://127.0.0.1:8080 启动控制台
+  webtouch studio --port 9090           # 指定端口 9090
 `
 }

@@ -44,23 +44,24 @@
 > 边界：**skill 只讲“怎么用”，本文件是“怎么维护/发布”的项目规范**，二者不互相混入。
 
 1. **稳定版 = 本地最近成功构建**：`make install`（= `make build` + `make probe-wasm` +
-   固定 `/usr/local/bin/{webtouch,uws,uws-engine}` → 仓库 `bin/` 内产物）。产物统一在
-   `bin/`：`bin/webtouch` + `bin/uws-engine`（仓库根 `webtouch`/`uws` 为兼容软链）；
-   wasm 在 `build/probe_wasm_wasm/`。`uws probe`（AXTree + 截图报给 Agent 层）开箱可用。
-2. **版本核对/升级**：`uws daemon status` 看运行版本；二进制更新后执行
+   固定 `/usr/local/bin/{webtouch,uws,webtouch-engine,uws-engine}` → 仓库 `bin/` 内产物）。
+   正式名是 `bin/webtouch` + `bin/webtouch-engine`；`uws` / `uws-engine` 是弃用软链
+   （仓库根 `webtouch`/`uws` 同样指向 CLI）。
+   wasm 在 `build/probe_wasm_wasm/`。`webtouch probe`（AXTree + 截图报给 Agent 层）开箱可用。
+2. **版本核对/升级**：`webtouch daemon status` 看运行版本（`uws` 为弃用别名）；二进制更新后执行
    `make engine-restart`（build + daemon restart），或 `make install` 后再
-   `uws daemon restart`。禁止只替换二进制不重启（版本漂移根因）。
+   `webtouch daemon restart`。禁止只替换二进制不重启（版本漂移根因）。
    **默认策略（2026-09-03 定案）**：release / 引擎二进制更新若影响功能一致性，
    默认立即 restart 对齐运行版本，**不再询问**；restart 不影响已登录的调试 Chrome
-   （Chrome 由 uws 独立生命周期管理，9222 端口与登录态保留）。
+   （Chrome 由 webtouch 独立生命周期管理，9222 端口与登录态保留）。
 3. **任务期间允许构建与重启（2026-09-23 用户定案放宽）**：WebTouch 是测试环境，Agent 可自行
-   `make build/install/engine-restart`、`uws daemon restart`、`go build/go test`、
+   `make build/install/engine-restart`、`webtouch daemon restart`、`go build/go test`、
    在 `/tmp` 下写诊断脚本（含只读 CDP）、起停自建浏览器会话与 profile、清理自建 profile 锁。
    只剩两条硬约束：(a) 改完源码必须 restart 才能宣称新版本生效（防版本漂移）；
    (b) 不得用重启/清锁来掩盖真实账号页的风险信号（见 `Tasks.md` 停止线，那只锁账号页不锁引擎）。
    环境异常（入口缺失、probe 缺 wasm、锁残留）先自行修复，修不了再上报；
    不再默认"停下等维护者"。
-4. **浏览器生命周期收口 uws**：`--attach debug` 自动拉起/清理 stale 锁
+4. **浏览器生命周期收口 CLI**：`--attach debug` 自动拉起/清理 stale 锁
    （`coordinator/attach.py`，setsid 常驻），不使用 launchd（历史 plist 仅留档未加载）。
 5. **反馈闭环**：稳定模式缺能力 → 记录 feedback（USER_ACTION/GLOBAL），按
    `docs/tdd-checklist.md` 走 TDD，收敛后 `make install` 重新发布。

@@ -41,39 +41,65 @@ else
     echo ">>> [1/3] 调试 Chrome 已在运行 (http://127.0.0.1:9222)，直接复用登录态。"
 fi
 
-# 2. 确保 uws-engine 在运行（50051 端口）
+# 2. 确保引擎在运行（50051 端口）。正式名 webtouch-engine，uws-engine 为兼容软链。
 if ! lsof -nP -iTCP:50051 -sTCP:LISTEN >/dev/null 2>&1; then
-    echo ">>> [2/3] 正在启动 uws-engine (gRPC 127.0.0.1:50051)..."
-    if [ ! -f ./bin/uws-engine ]; then
-        echo ">>> 正在编译 ./bin/uws-engine..."
-        go build -o ./bin/uws-engine ./cmd/uws-engine
+    echo ">>> [2/3] 正在启动 webtouch-engine (gRPC 127.0.0.1:50051)..."
+    if [ ! -e ./bin/webtouch-engine ] && [ ! -e ./bin/uws-engine ]; then
+        echo ">>> 正在编译 ./bin/webtouch-engine..."
+        mkdir -p bin
+        go build -o ./bin/webtouch-engine ./cmd/uws-engine
+        ln -sfn webtouch-engine ./bin/uws-engine
     fi
-    nohup ./bin/uws-engine --browser cdp --grpc-addr 127.0.0.1:50051 --log-path "${HOME}/.uws/engine-onlinelogs.db" >/dev/null 2>&1 &
+    if [ -e ./bin/webtouch-engine ]; then
+        ENGINE_BIN=./bin/webtouch-engine
+    else
+        ENGINE_BIN=./bin/uws-engine
+    fi
+    nohup "${ENGINE_BIN}" --browser cdp --grpc-addr 127.0.0.1:50051 --log-path "${HOME}/.uws/engine-onlinelogs.db" >/dev/null 2>&1 &
     disown
     sleep 1
-    echo ">>> uws-engine 已就绪。"
+    echo ">>> 引擎已就绪 (${ENGINE_BIN})。"
 else
-    echo ">>> [2/3] uws-engine 已在运行 (127.0.0.1:50051)。"
+    echo ">>> [2/3] 引擎已在运行 (127.0.0.1:50051)。"
 fi
 
-# 3. 确保 uws-gateway 在运行（8000 端口）
+# 3. 确保网关在运行（8000 端口）。正式名 webtouch-gateway，uws-gateway 为兼容名。
 if ! lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; then
-    echo ">>> [3/3] 正在启动 uws-gateway (HTTP 127.0.0.1:8000)..."
-    if [ ! -f ./uws-gateway ]; then
-        echo ">>> 正在编译 ./uws-gateway..."
-        go build -o ./uws-gateway ./cmd/uws-gateway
+    echo ">>> [3/3] 正在启动 webtouch-gateway (HTTP 127.0.0.1:8000)..."
+    if [ ! -e ./bin/webtouch-gateway ] && [ ! -e ./bin/uws-gateway ] && [ ! -e ./webtouch-gateway ] && [ ! -e ./uws-gateway ]; then
+        echo ">>> 正在编译 ./bin/webtouch-gateway..."
+        mkdir -p bin
+        go build -o ./bin/webtouch-gateway ./cmd/uws-gateway
+        ln -sfn webtouch-gateway ./bin/uws-gateway
     fi
-    nohup ./uws-gateway >/dev/null 2>&1 &
+    if [ -e ./bin/webtouch-gateway ]; then
+        GATEWAY_BIN=./bin/webtouch-gateway
+    elif [ -e ./bin/uws-gateway ]; then
+        GATEWAY_BIN=./bin/uws-gateway
+    elif [ -e ./webtouch-gateway ]; then
+        GATEWAY_BIN=./webtouch-gateway
+    else
+        GATEWAY_BIN=./uws-gateway
+    fi
+    nohup "${GATEWAY_BIN}" >/dev/null 2>&1 &
     disown
     sleep 1
-    echo ">>> uws-gateway 已就绪。"
+    echo ">>> 网关已就绪 (${GATEWAY_BIN})。"
 else
-    echo ">>> [3/3] uws-gateway 已在运行 (127.0.0.1:8000)。"
+    echo ">>> [3/3] 网关已在运行 (127.0.0.1:8000)。"
 fi
 
 echo "=================================================="
 echo "    ✅ WebTouch 浏览器执行服务已在线！"
 echo "    - Agent Hub 模型 API: http://127.0.0.1:18080/v1"
 echo "    - WebTouch 健康检查: http://127.0.0.1:8000/v1/health"
-echo "    - SDK 环境变量: eval \$(./uws bus env)"
+if [ -e ./webtouch ]; then
+    CLI_BIN=./webtouch
+elif [ -e ./uws ]; then
+    CLI_BIN=./uws
+else
+    CLI_BIN=webtouch
+fi
+echo "    - SDK 环境变量: eval \$(${CLI_BIN} bus env)"
+echo "    - 对外 CLI: ${CLI_BIN} session （uws 为弃用别名）"
 echo "=================================================="

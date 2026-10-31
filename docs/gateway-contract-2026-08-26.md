@@ -1,12 +1,10 @@
-# uws-gateway 网关契约（M0，2026-08-26）
+# WebTouch 浏览器执行服务契约（历史二进制名 uws-gateway；M0，2026-08-26）
 
-> **历史背景（2026-09-02）**：按 WebTouch 分层定稿（`docs/evidence/archive/web-touch-architecture-2026-09-02.md`
-> §2.2/§5-R1），统一 AI 网关属**应用层**，当前混在核心仓（`apps/gateway`、`cmd/uws-gateway`、
-> `coordinator/app/api_server.py`、`coordinator/app/providers/`）；Python 服务已归档，OpenAI 兼容门面现由 Agent Hub 提供。
+> **历史背景（2026-09-02）**：按当时的分层定稿，统一 AI 网关属**应用层**，源码在 `apps/gateway` 与 `cmd/uws-gateway`（二进制现为 `webtouch-gateway`，`uws-gateway` 为弃用软链）。Python 服务已不在本树，OpenAI 兼容门面由 Agent Hub 提供。该分层稿不在本仓库树内。
 
 > **职责迁移（2026-10-03 用户定案）**：Agent Hub 是面向客户端的统一模型 API 与模型目录所有者。WebTouch 仅运行浏览器 provider 执行服务，并继续管理网站、账号、Vault、账号到 Profile/指纹绑定、站点会话和风控状态。WebTouch 的 `/v1/models`、`/v1/text`、`/v1/chat*`、`/v1/responses` 客户端模型门面已退役；调用返回 `410 gateway_moved` 并指向 Agent Hub。
 >
-> **对外入口（2026-10-31）**：WebTouch 对外能力面改为 CLI（`webtouch` / `uws`）。session 生命周期由本机 lease 持有，见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。`:8000` 的 `/internal/provider/*` 只是迁移期内部入口（响应带废弃头；`UWS_PROVIDER_HTTP=410` 时直接退役且不触达引擎），不再是对外契约。引擎 gRPC 仍是内部 IPC。唯一跨项目边界见 [`Agent Hub 模型网关与 WebTouch 浏览器边界`](2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。本文后续关于 OpenAI 请求/响应形状、模型目录、流式和错误语义，描述的是迁移期内部执行形状，不构成 WebTouch 对外 API。
+> **对外入口（2026-10-31，命名以 CLI session 契约 §8 / GLOBAL #133 为准）**：对外命令主名是 `webtouch`，`uws` 是弃用别名。session 生命周期由本机 lease 持有，见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。`:8000` 的 `/internal/provider/*` 只是迁移期内部入口（响应带废弃头；`UWS_PROVIDER_HTTP=410` 时直接退役且不触达引擎），不再是对外契约。引擎 gRPC 仍是内部 IPC。唯一跨项目边界见 [`Agent Hub 模型网关与 WebTouch 浏览器边界`](2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。本文后续关于 OpenAI 请求/响应形状、模型目录、流式和错误语义，描述的是迁移期内部执行形状，不构成 WebTouch 对外 API。
 >
 > 浏览器 provider 执行契约：Agent Hub 负责客户端协议与 provider 路由；WebTouch 将 Hub 指令转换为网页动作并返回结果。WebTouch 不提供通用模型 API。
 > 状态：浏览器执行与站点管理仍由 `cmd/uws-gateway` + `apps/gateway` 提供；客户端模型 API 由 Agent Hub 提供。

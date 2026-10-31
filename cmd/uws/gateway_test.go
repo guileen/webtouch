@@ -10,8 +10,11 @@ import (
 
 func TestGatewayGuide(t *testing.T) {
 	guide := gatewayGuide()
+	if !strings.Contains(guide, "webtouch api") {
+		t.Errorf("guide 应包含 webtouch api")
+	}
 	if !strings.Contains(guide, "uws api") {
-		t.Errorf("guide 应包含 uws api")
+		t.Errorf("guide 应标明弃用别名 uws api")
 	}
 	if !strings.Contains(guide, "/internal/provider/chat") {
 		t.Errorf("guide 应包含 /internal/provider/chat")

@@ -1,4 +1,4 @@
-// uws session / webtouch session —— 对外 session 生命周期。
+// webtouch session —— 对外 session 生命周期（弃用别名：uws session）。
 //
 // CLI 只携带 session_id。状态在本机 lease（pkg/clisession），不在本进程里。
 // 契约：docs/cli-session-contract-2026-10-31.md。
@@ -290,7 +290,7 @@ func sessionGuide() string {
 
 句柄也可写在位置参数，或环境变量 WEBTOUCH_SESSION / UWS_SESSION（create 除外）。
 stdout 默认是 JSON（webtouch.cli.session.v1）。--text 打一行人类摘要。
-uws 是 webtouch 的兼容别名。
+弃用别名：uws session（同一二进制；以 uws 启动时 stderr 会提示改用 webtouch）。
 
 Hub 只应记账 JSON 里的 hub.channel 与 hub.site_conversation_id。
 account / profile 留在本机。凭据与 @vault: 不得出现在参数里。

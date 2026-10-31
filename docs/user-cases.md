@@ -1,6 +1,6 @@
 # WebTouch 用户场景与最佳实践 (User Cases & Best Practices)
 
-WebTouch (Universal Web Surrogate) 的设计不仅满足通用的网页测试与数据抓取，更是为了适应前沿的 AI Agent 交互和大规模高复杂度的数据清洗任务。
+WebTouch 的设计不仅满足通用的网页测试与数据抓取，更是为了适应前沿的 AI Agent 交互和大规模高复杂度的数据清洗任务。历史展开名 Universal Web Surrogate 与命令名 `uws` 已弃用，现行命令是 `webtouch`。
 
 本文档详细映射了用户的核心期望与 WebTouch 引擎在设计架构上的支持链路，以证明系统的严密性与用户友好性。
 
@@ -40,7 +40,7 @@ WebTouch (Universal Web Surrogate) 的设计不仅满足通用的网页测试与
 4. **CC 语料工具链（2026-08-20 续33 已移交 search-engine）**：
    - `cc-fetch` / `parse-warc` / `search` 三条 CC 语料工具命令已随代码整体迁至
      `labs/world-replay/search-engine/`（`se` 包，`python -m se cc-fetch|parse-warc|search`），
-     uws 仅保留在线爬取（run/crawl/api）保持义肢纯净；
+     webtouch 仅保留在线爬取（run/crawl/api）保持义肢纯净；
    - 完整闭环 = `se cc-fetch` → `se parse-warc` → `se search`
      （真实数据 → 离线语义提取 → BM25 检索），仅下载阶段需要网络；
    - 离线蒸馏环（WebTouch pipeline）仍以 Common Crawl 语料为原料，与 search-engine

@@ -17,7 +17,7 @@ func (h *Handler) allowDeprecatedProviderHTTP(w http.ResponseWriter, _ *http.Req
 	w.Header().Set("Link", `<urn:webtouch:cli:session>; rel="successor-version"`)
 	if providerHTTPRetired() {
 		writeError(w, http.StatusGone,
-			"WebTouch /internal/provider HTTP 已退役。对外契约是本机 CLI（webtouch / uws session，以及带 --session 的后续命令）。Agent Hub 应 exec CLI，不要再调用 :8000。",
+			"WebTouch /internal/provider HTTP 已退役。对外契约是本机 CLI：webtouch session（uws 为弃用别名）。Agent Hub 应 exec CLI，不要再调用 :8000。",
 			"provider_http_retired", "")
 		return false
 	}

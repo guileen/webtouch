@@ -1,43 +1,47 @@
 # WebTouch CLI 工具与配置指南 (CLI & Configuration)
 
+> 命令主名是 `webtouch`。`uws` 是同一二进制的弃用别名（用 `uws` 启动时 stderr 会提示）。
+> 状态目录仍是 `~/.uws`（本轮不迁移到 `~/.webtouch`）。环境变量 `UWS_*` 继续有效；同义覆盖：`WEBTOUCH_ENGINE_BIN`、`WEBTOUCH_ENGINE_ADDR`、`WEBTOUCH_GATEWAY_BIN`、`WEBTOUCH_STATE_DIR`。
+> 引擎/网关正式文件名是 `webtouch-engine` / `webtouch-gateway`，`uws-engine` / `uws-gateway` 为软链。
+
 本指南面向最终用户、AI Agent（如 Codex / Claude Code）以及数据爬虫工程师，说明如何以**最少配置、傻瓜化**的方式调用 WebTouch 引擎，而无需关心底层的 gRPC 通信细节。
 
 ## 1. 软件形态与运行方式
 
 **WebTouch 不是浏览器插件，也不是魔改版的自有浏览器。**
-它是一个独立的跨平台可执行二进制 CLI 工具 (`uws`)。它在底层通过 CDP (Chrome DevTools Protocol) 协议接管你系统中已经安装的普通 Chrome / Chromium 浏览器。
+它是一个独立的跨平台可执行二进制 CLI 工具 (`webtouch`)。它在底层通过 CDP (Chrome DevTools Protocol) 协议接管你系统中已经安装的普通 Chrome / Chromium 浏览器。
 
-- **对于 AI Agent**：通过执行简单的 `uws run` 命令行，Agent 可以轻松驱动浏览器。
+- **对于 AI Agent**：通过执行简单的 `webtouch run` 命令行，Agent 可以轻松驱动浏览器。
 - **对于 Linux 爬虫**：在无界面的 Linux 服务器上，CLI 会自动拉起 Headless Chromium。
 - **无需写 gRPC 代码**：gRPC 仅供内部解耦和分布式微服务架构使用。日常的单机或 Agent 操作全部由 CLI 提供傻瓜化封装。
 
-### 1.1 引擎守护进程（uws daemon，取代 launchd）
+### 1.1 引擎守护进程（webtouch daemon，取代 launchd）
 
-引擎（`cmd/uws-engine`，监听 gRPC 50051 的在线执行环）由 `uws` CLI 直接托管，不再依赖 launchd。
-`uws run/crawl/api` 在执行前会先 `ensureEngine`——若引擎未监听则按需拉起，跑完自动闲置（不随 CLI
+引擎（`cmd/uws-engine`，监听 gRPC 50051 的在线执行环）由 `webtouch` CLI 直接托管，不再依赖 launchd。
+`webtouch run/crawl/api` 在执行前会先 `ensureEngine`——若引擎未监听则按需拉起，跑完自动闲置（不随 CLI
 退出被杀，也不常驻开机自启）。
 
 ```bash
-uws daemon start      # 拉起引擎守护进程（默认 127.0.0.1:50051，真实 Chrome 模式）
-uws daemon status     # 查看运行状态（pid / 地址 / 启动时间 / 是否监听）
-uws daemon restart    # 重启（先停后起）
-uws daemon stop       # 停止
+webtouch daemon start      # 拉起引擎守护进程（默认 127.0.0.1:50051，真实 Chrome 模式）
+webtouch daemon status     # 查看运行状态（pid / 地址 / 启动时间 / 是否监听）
+webtouch daemon restart    # 重启（先停后起）
+webtouch daemon stop       # 停止
 ```
 
 **托管地址与状态目录**：
 
 - 地址：默认 `127.0.0.1:50051`，可用环境变量 `UWS_ENGINE_ADDR` 或 `daemon` 子命令的
   `--engine-addr`/`--grpc-addr` 覆盖。子命令（run/crawl/api）的 `--engine-addr` 若指向
-  非托管地址且未监听，CLI 会提示先 `uws daemon start` 托管，**不会**为陌生地址静默拉起第二个引擎。
+  非托管地址且未监听，CLI 会提示先 `webtouch daemon start` 托管，**不会**为陌生地址静默拉起第二个引擎。
 - 状态文件：pid/元数据/日志落在 `~/.uws/engine.pid`、`~/.uws/engine.json`、`~/.uws/engine.log`
   （`UWS_ENGINE_DIR` 可覆盖目录，便于测试隔离）。
-- 引擎二进制：默认取 `uws` 同目录的 `bin/uws-engine`，其次 `PATH`；`UWS_ENGINE_BIN` 显式指定最稳。
+- 引擎二进制：默认同目录 `webtouch-engine`（软链 `uws-engine`），其次 `PATH`；`WEBTOUCH_ENGINE_BIN` 优先于 `UWS_ENGINE_BIN`。
 - 启动参数：默认 `--browser cdp --log-path ~/.uws/engine-onlinelogs.db --vlm-learn-path ~/.uws/learned.json`
   （真实 Chrome + 在线日志落库 + **VLM 自进化默认开**：学到的「页面 + 语义 → 定位」下次免 VLM；
   落点自证与写入门禁见 spec §5.0.9 条款 6，失效条目会在复用判 miss 时自动清掉）；
   追加/覆盖用 `UWS_ENGINE_ARGS`；关闭自进化用 `UWS_LEARN=off`（`UWS_LEARN=<路径>` 可换存储位置）。
 
-> 说明：引擎以后台（新会话）进程方式启动，`uws` CLI 退出后仍保活；`uws daemon stop/restart` 由 CLI
+> 说明：引擎以后台（新会话）进程方式启动，`webtouch` CLI 退出后仍保活；`webtouch daemon stop/restart` 由 CLI
 > 通过 pid 直接控制。VLM 兜底默认开启（`--vlm-fallback` 默认 `true`），Key 自动读
 > `UWS_VLM_API_KEY || DEEPSEEK_API_KEY`。
 
@@ -51,7 +55,7 @@ webtouch session use --session wts_...          # 或 export WEBTOUCH_SESSION=wt
 webtouch session close --session wts_...
 ```
 
-`uws` 与 `webtouch` 等价。stdout 是 JSON（`webtouch.cli.session.v1`）。Hub 只记账其中的 `hub.channel` 与 `hub.site_conversation_id`。同一账号必须已经 `identity bind`，本命令不新建指纹。契约见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。
+`webtouch` 与 `webtouch` 等价。stdout 是 JSON（`webtouch.cli.session.v1`）。Hub 只记账其中的 `hub.channel` 与 `hub.site_conversation_id`。同一账号必须已经 `identity bind`，本命令不新建指纹。契约见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。
 
 ---
 
@@ -64,14 +68,14 @@ WebTouch 追求“开箱即用”，默认不需要任何配置即可使用预�
 
 ```bash
 # 设置兜底模型 API (全局生效，自动保存在 ~/.uws/config.yaml)
-uws config set fallback_model deepseek-chat
-uws config set fallback_api_base https://api.deepseek.com/v1
-uws config set fallback_api_key "sk-xxxxxx"
+webtouch config set fallback_model deepseek-chat
+webtouch config set fallback_api_base https://api.deepseek.com/v1
+webtouch config set fallback_api_key "sk-xxxxxx"
 ```
 
 *如果你使用的是本地大模型（如 Ollama），可以直接指向本地：*
 ```bash
-uws config set fallback_api_base http://localhost:11434/v1
+webtouch config set fallback_api_base http://localhost:11434/v1
 ```
 
 ### 2.2 配置打码 / VLM 视觉求解服务（WAF 对抗）
@@ -82,17 +86,17 @@ uws config set fallback_api_base http://localhost:11434/v1
 
 ```bash
 # 指向任意兼容协议的 HTTP 打码/VLM 服务
-uws config set vlm_provider http
-uws config set vlm_endpoint "https://solver.example.com/v1/solve"
-uws config set vlm_api_key "sk-xxxxxx"     # 敏感值，输出自动隐藏
-uws config set vlm_timeout 10              # 单次求解超时（秒）
-uws config set vlm_max_solves 3            # 单任务求解封顶（防无限重试）
+webtouch config set vlm_provider http
+webtouch config set vlm_endpoint "https://solver.example.com/v1/solve"
+webtouch config set vlm_api_key "sk-xxxxxx"     # 敏感值，输出自动隐藏
+webtouch config set vlm_timeout 10              # 单次求解超时（秒）
+webtouch config set vlm_max_solves 3            # 单任务求解封顶（防无限重试）
 ```
 
 请求协议：`POST {"image": "<base64 PNG>", "challenge_hint": "<目标语义>"}`，
 配置了 api_key 时携带 `Authorization: Bearer <key>`；响应
 `{"x1":..., "y1":..., "x2":..., "y2":..., "action":"drag"}`。
-本地演示/测试可用 `uws config set vlm_provider mock`（固定坐标确定性求解）。
+本地演示/测试可用 `webtouch config set vlm_provider mock`（固定坐标确定性求解）。
 
 ---
 
@@ -115,14 +119,14 @@ uws config set vlm_max_solves 3            # 单任务求解封顶（防无限�
 ```bash
 # Agent 下发的终端指令：自动打开淘宝并搜索显卡，返回商品列表
 # 推荐：一句自然语言目标（chat 目标模式，Agent/VLM 自决）；结果完整打印 stdout
-uws "在淘宝搜索 RTX 4090，提取第一页商品名称和价格列表"
+webtouch "在淘宝搜索 RTX 4090，提取第一页商品名称和价格列表"
 
 # 确定性已知路径用 DSL（结果同样直接打印 stdout；--output 仅在需要留档时另存）
-uws run --attach default --target-url "https://www.taobao.com" \
+webtouch run --attach default --target-url "https://www.taobao.com" \
   --plan "search:RTX 4090\nextract:第一页商品列表 | $列表\nreply:$列表"
 
 # 只读观察之前建立的专属会话：只用已就绪 CDP 回传 URL / AXTree，不启动/重启 Chrome；缺失/过期 session 会拒绝
-uws run --observe --session codex-taobao-check --screenshot
+webtouch run --observe --session codex-taobao-check --screenshot
 ```
 
 > 注意：Chrome 未以调试端口启动时，日常浏览器需要一次「退出并重启」才能被 CDP 接管，
@@ -140,7 +144,7 @@ WebTouch 支持**在线智能爬取**：它不关心底层 HTML，而是根据�
 **模式 A：在线智能爬虫 (指定深度自动下钻)**
 ```bash
 # 从入口 URL 开始，提取文章正文、作者头像，自动翻页/点击详情深入 2 层
-cat urls.txt | uws crawl \
+cat urls.txt | webtouch crawl \
   --concurrency 8 \
   --depth 2 \
   --signals "main_article, author_name, no_ads" \
@@ -151,7 +155,7 @@ cat urls.txt | uws crawl \
 **模式 B：CC 语料工具链（已移交 search-engine）**
 
 `cc-fetch` / `parse-warc` / `search` 三条 CC 语料工具命令已随代码整体移交
-`labs/world-replay/search-engine/`（`se` 包，2026-08-20），uws 不再包含
+`labs/world-replay/search-engine/`（`se` 包，2026-08-20），webtouch 不再包含
 搜索引擎 demo 层。使用方式与完整闭环见
 `labs/world-replay/search-engine/docs/cli-and-config.md`：
 
@@ -164,7 +168,7 @@ python -m se search --corpus ./cc_md/ --serve --port 8001
 ```
 
 ### 3.3 场景三：Web-to-API（与大模型网页对话）
-启动 WebTouch 浏览器 provider 执行服务；客户端模型 API 由 Agent Hub 提供。命令已精简为 `uws api`。
+启动 WebTouch 浏览器 provider 执行服务；客户端模型 API 由 Agent Hub 提供。命令已精简为 `webtouch api`。
 
 ```bash
 # 启动本地浏览器执行服务（内部接口只供 Agent Hub 调用）
@@ -188,18 +192,18 @@ curl -X POST http://127.0.0.1:18080/v1/chat/completions \
 `extract(chat_answer)`；回答提取轮询直到「出现不同于发送前基线的新回答且连续
 稳定 1.5s」才返回（多轮不会把上一轮的旧回答当新回答返回，2026-08-25 实测修复）。
 
-### 3.4 场景四：义眼评审（uws chat，直接与视觉模型对话）
+### 3.4 场景四：义眼评审（webtouch chat，直接与视觉模型对话）
 
-复刻/站点评审这类需求，不需要一整套测量/规格对比原语，只需一条：把图（或让 uws 开站点
+复刻/站点评审这类需求，不需要一整套测量/规格对比原语，只需一条：把图（或让 webtouch 开站点
 截图）+ 一句问题交给视觉模型，让它在「有一定认知的体验评审者」视角下给出反馈——是否一致、
 是否满足需求、按钮位置、手势是否成功、视觉/布局/文案差异。
 
 ```bash
-./uws chat "判断两个实现是否一致" --img ref.png --img clone.png      # 图对图（默认结构化 JSON）
-./uws chat "这是哪种布局？" --img shot.png --plain                   # 单图评审，出自然语言
-./uws chat "对比这两个站点第一屏" --url https://a.example --url https://b.example
-./uws chat "帮我检查 a.com 和 b.com 的 differences"                   # 纯自然语言：自动提取站点+像素 diff
-./uws -p "两个实现是否一致" --img a.png --img b.png                  # -p 是 chat 顶层别名
+./webtouch chat "判断两个实现是否一致" --img ref.png --img clone.png      # 图对图（默认结构化 JSON）
+./webtouch chat "这是哪种布局？" --img shot.png --plain                   # 单图评审，出自然语言
+./webtouch chat "对比这两个站点第一屏" --url https://a.example --url https://b.example
+./webtouch chat "帮我检查 a.com 和 b.com 的 differences"                   # 纯自然语言：自动提取站点+像素 diff
+./webtouch -p "两个实现是否一致" --img a.png --img b.png                  # -p 是 chat 顶层别名
 ```
 
 输出（默认，给 Agent 程序化消费）：
@@ -223,13 +227,13 @@ CaptureScreenshot 采样，每站点独立 context 防 Cookie 串）、`--page`�
 
 ```bash
 # 像素级 diff：两张图逐像素对比，差异图(洋红=差异)+统计注入问题，VLM 给量化判据
-./uws chat "差异点在哪？给量化判据" --img ref.png --img clone.png --diff
+./webtouch chat "差异点在哪？给量化判据" --img ref.png --img clone.png --diff
 
 # 区域放大（放大镜）：细看第一张图的指定区域
-./uws chat "按钮的圆角/阴影细节" --img shot.png --zoom 120,80,200,120,4
+./webtouch chat "按钮的圆角/阴影细节" --img shot.png --zoom 120,80,200,120,4
 
 # 区域取色（比色卡）：第一张图指定区域的平均色
-./uws chat "导航栏主色是什么" --img shot.png --region-color 0,0,390,48
+./webtouch chat "导航栏主色是什么" --img shot.png --region-color 0,0,390,48
 ```
 
 `--diff` 生成的是**确定性证据**（差异像素占比/bbox/最大信道差），VLM 只负责解释该证据，不
@@ -247,7 +251,7 @@ Fibonacci 1s/2s 最多重试 2 次。页面会话首次请求初始化并常驻�
 `--diff` 拿像素证据。这样用户直接问「帮我检查 a.com 和 b.com 的 differences」即可得到
 `{verdict,summary,checks,confidence}` 的量化判据，无需知道底层标志。门控条件（≥2 URL +
 比较意图 + 未显式给视觉输入）刻意保守，避免把「打开某个站点看看」这类单站请求误当对比而
-误开引擎。实测：`uws chat "帮我检查 example.com 和 wikipedia.org 的 differences"` →
+误开引擎。实测：`webtouch chat "帮我检查 example.com 和 wikipedia.org 的 differences"` →
 `verdict=different`（像素差异 96.3%、bbox 覆盖全图、4 条 checks）。
 
 **义眼主控循环（多轮能力，VLM 自决，2026-08-28）**：引擎具备多轮证据能力——`chat` 默认走一个
@@ -334,10 +338,10 @@ curl http://127.0.0.1:18080/v1/models
 
 ---
 
-### 3.5 场景五：站点探索报告（uws explore，启发式导航图/功能图）
+### 3.5 场景五：站点探索报告（webtouch explore，启发式导航图/功能图）
 
 「了解一个网站、生成导航图/功能图」是通用能力：既可用于测试摸底（页面类型、可交互元素、
-testid 清单、锁定路径），也可用于竞品/目标站点的功能地图与验收前置。`uws explore` 用
+testid 清单、锁定路径），也可用于竞品/目标站点的功能地图与验收前置。`webtouch explore` 用
 **纯规则启发式**（不调 VLM，省 token）：从种子 URL 出发 BFS 同域链接，每页经 CDP 采集
 标题/正文摘要/可交互元素（button/a/input/testid/role），按 URL+testid+正文关键词确定性分类
 页面类型，输出 Markdown 报告（Mermaid 导航图 + 页面清单 + 按类型聚合的功能清单），
@@ -345,13 +349,13 @@ testid 清单、锁定路径），也可用于竞品/目标站点的功能地图
 
 ```bash
 # 附着本地 Chrome（共享登录态）探索站点，默认 12 页 / 3 层
-uws explore https://drama.tgaigc.com --settle-sec 5 --output site-report.md
+webtouch explore https://drama.tgaigc.com --settle-sec 5 --output site-report.md
 
 # 收紧探索规模 / 改稳定等待
-uws explore https://example.com --max-pages 6 --max-depth 2 --settle-sec 3
+webtouch explore https://example.com --max-pages 6 --max-depth 2 --settle-sec 3
 
 # 不截图（纯结构报告）
-uws explore https://example.com --no-shots
+webtouch explore https://example.com --no-shots
 ```
 
 输出结构：

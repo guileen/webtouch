@@ -12,10 +12,10 @@ WebTouch 体系按业务边界划分为五大高内聚领域。每个领域包�
 
 | 领域 | 核心职责 | 代码落点 | 当前生效活规范（Living Specs） | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
-| **01-Bus**<br>浏览器模型 provider | Agent Hub 调用网页模型的站点适配、账号/Profile/指纹绑定、会话连续、登录探针、页内直发与 DOM 兜底、流式响应、站点风控保护；客户端统一模型 API 由 Agent Hub 承担 | `apps/gateway/`<br>`cmd/uws-gateway/`（浏览器执行服务） | - [`gateway-contract-2026-08-26.md`](gateway-contract-2026-08-26.md)<br>- [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)（对外 CLI + 本机 session lease）<br>- [`agent-interaction-contract-2026-09-23.md`](agent-interaction-contract-2026-09-23.md)<br>- [`api-reference.md`](api-reference.md)<br>- [Agent Hub 边界规范](2026-10-03-agenthub-model-gateway-webtouch-boundary.md) | `ACTIVE` |
+| **01-Bus**<br>浏览器模型 provider | Agent Hub 调用网页模型的站点适配、账号/Profile/指纹绑定、会话连续、登录探针、页内直发与 DOM 兜底、流式响应、站点风控保护；客户端统一模型 API 由 Agent Hub 承担 | `apps/gateway/`<br>`cmd/uws-gateway/`（源码目录；二进制 `webtouch-gateway`，`uws-gateway` 为弃用软链） | - [`gateway-contract-2026-08-26.md`](gateway-contract-2026-08-26.md)<br>- [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)（对外 CLI + 本机 session lease）<br>- [`agent-interaction-contract-2026-09-23.md`](agent-interaction-contract-2026-09-23.md)<br>- [`api-reference.md`](api-reference.md)<br>- [Agent Hub 边界规范](2026-10-03-agenthub-model-gateway-webtouch-boundary.md) | `ACTIVE` |
 | **02-Organ**<br>免打扰桌面执行器官 | 原生 Chrome CDP 接管、WebRTC 阻断、原型链 Native 伪装、macOS 伴生悬浮壳（`NonActivatingPanel` 绝不抢焦点）、人机挑战感知与防乱点熔断 | `pkg/browser/`<br>`cmd/viewer/`<br>`pkg/challenge/`<br>`pkg/fingerprint/` | - [`fingerprint-browser-engineering-blueprint-and-checklist.md`](fingerprint-browser-engineering-blueprint-and-checklist.md)<br>- [`fingerprint-and-viewer-final-spec-2026-09-12.md`](fingerprint-and-viewer-final-spec-2026-09-12.md)<br>- [`viewer-requirements-2026-09-11.md`](viewer-requirements-2026-09-11.md)<br>- [`../spec/physical-patches.md`](../spec/physical-patches.md) | `ACTIVE` |
-| **03-Engine-Alg**<br>确定性引擎与决策内核 | 候选建池（`pageCandidatePool` 口径）、确定性 node_id 定位、AX 导出、分层调度；管理冷态算法护城河 | `pkg/matcher/`<br>`pkg/engine/`<br>`pkg/classifier/`<br>`pkg/verifier/`<br>`pkg/probe_wasm/`<br>`cmd/tier1/`<br>`benchmarks/tier1/` | - [`tier1-candidate-quality-2026-09-23.md`](tier1-candidate-quality-2026-09-23.md)<br>- [`algorithm-assets-inventory-2026-09-23.md`](algorithm-assets-inventory-2026-09-23.md)<br>- [`scheduling-trace-2026-09-23.md`](scheduling-trace-2026-09-23.md)<br>- [`wstn-algorithm-task-spec.md`](wstn-algorithm-task-spec.md)<br>- [`../spec/algorithm-kernel.md`](../spec/algorithm-kernel.md) | `ACTIVE`<br>*(ONNX/WASM 资产 PARKED)* |
-| **04-Learning**<br>经验沉淀与正负闭环 | 记录可信 Execution Episode，区分正/负/未知样本，严把 G-PROOF 命中自证门禁，杜绝经验投毒 | `learning/`<br>`pipeline/`<br>`pkg/knowledge/` | - [`knowledge-ops.md`](knowledge-ops.md)<br>- [`../spec/knowledge-versioning.md`](../spec/knowledge-versioning.md) | `PARKED`<br>*(待前置基线建立后激活)* |
+| **03-Engine-Alg**<br>确定性引擎与决策内核 | 候选建池（`pageCandidatePool` 口径）、确定性 node_id 定位、AX 导出、分层调度；管理冷态算法护城河 | `pkg/matcher/`<br>`pkg/engine/`<br>`pkg/classifier/`<br>`pkg/verifier/`<br>`pkg/probe_wasm/`<br>`cmd/tier1/`<br>（`benchmarks/tier1/` 不在本树） | - [`tier1-candidate-quality-2026-09-23.md`](tier1-candidate-quality-2026-09-23.md)<br>- [`algorithm-assets-inventory-2026-09-23.md`](algorithm-assets-inventory-2026-09-23.md)<br>- [`scheduling-trace-2026-09-23.md`](scheduling-trace-2026-09-23.md)<br>- [`wstn-algorithm-task-spec.md`](wstn-algorithm-task-spec.md)<br>- [`../spec/algorithm-kernel.md`](../spec/algorithm-kernel.md) | `ACTIVE`<br>*(ONNX/WASM 资产 PARKED)* |
+| **04-Learning**<br>经验沉淀与正负闭环 | 记录可信 Execution Episode，区分正/负/未知样本，严把 G-PROOF 命中自证门禁，杜绝经验投毒 | `pkg/knowledge/`<br>（`learning/`、`pipeline/` 不在本树） | - [`knowledge-ops.md`](knowledge-ops.md)<br>- [`../spec/knowledge-versioning.md`](../spec/knowledge-versioning.md) | `PARKED`<br>*(待前置基线建立后激活)* |
 | **05-QA-Studio**<br>Vibe Coding 交付验收层 | 充当独立 Judge，以 Acceptance Contract 为边界，汇集多源证据出具客观审查与 Agent-ready 修复指引 | `pkg/qa/`<br>`pkg/webcontrol/`<br>`pkg/provider/`<br>`pkg/vlm/`（Eye 视觉显微原语） | - [`qa-studio/README.md`](qa-studio/README.md)<br>- [`qa-studio/commercial-validation-execution-plan-2026-09-14.md`](qa-studio/commercial-validation-execution-plan-2026-09-14.md)<br>- [`qa-studio/delivery-readiness-requirements-2026-09-15.md`](qa-studio/delivery-readiness-requirements-2026-09-15.md) | `HOLD`<br>*(业务挂起)* |
 
 > **状态定义**（活规范生命周期四态，任务/里程碑状态见 `Tasks.md`）：
@@ -48,17 +48,6 @@ WebTouch 体系按业务边界划分为五大高内聚领域。每个领域包�
 
 ---
 
-## 三、 历史案卷库（Evidence Archive · 不可篡改事实）
+## 三、 历史案卷库
 
-根据文档治理纪律，所有单次实机试跑、理论探针实验、历史草案等**过程性证据已全部下沉至案卷库，严禁平铺在活规范目录**：
-
-- **实机与真实站试跑案卷**：[`evidence/pilots/`](evidence/pilots/)
-  - Wikipedia 真实站候选试跑报告与标签（`real-site-candidate-pilot-2026-09-23.md`、`wikipedia-search-pilot-2026-09-23.json`）
-  - 真实浏览器 Dogfood 闭环全记录（`dogfood-live-2026-09-23.md`）
-- **Agent Hub 吞吐 Sprint 本地长页基线**：[`evidence/sprint-agenthub-throughput-2026-10-01.md`](evidence/sprint-agenthub-throughput-2026-10-01.md)；本地静态页面、无动作、并发 1/2/4 的四片截图及拼版，实测状态以案卷为准。
-- **理论探针与研究报告**：[`evidence/research/`](evidence/research/)
-  - 2026-08-28 零点线三盲区实证实验（`research-零点线-三盲区实证-2026-08-28.md`）
-  - Tier 1 / 1.5 / 2 系列研究、竞品调研与 CDP 实测记录
-- **历史版本与草案归档**：[`evidence/archive/`](evidence/archive/)
-  - 旧桌面客户端草案、早期架构稿与历史验收流水
-- **案卷逐篇目录**：[`evidence/README.md`](evidence/README.md) 列出案卷库内全部 Markdown 记录，包括各阶段 Viewer 取证元数据和指纹审计。
+单次实跑、探针与历史草案不属于活规范。`docs/evidence/`、`archive/`、`benchmarks/` 不在本仓库树内，本图不链接这些路径，也不在这里补造目录。

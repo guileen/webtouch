@@ -6,7 +6,7 @@
 
 ## 1. 定调
 
-1. **对外契约 = CLI**。命令名是 `webtouch`，`uws` 是兼容别名（同一二进制）。调用方是本机子进程：Agent Hub、脚本、IDE Agent。成功与失败都写 stdout JSON，退出码 `0` / `1`。
+1. **对外契约 = CLI**。命令主名是 `webtouch`。`uws` 是同一二进制的弃用别名：以 `uws` 启动时向 stderr 打一行提示，stdout JSON 不变。调用方是本机子进程：Agent Hub、脚本、IDE Agent。成功与失败都写 stdout JSON，退出码 `0` / `1`。
 2. **CLI 无状态，session 有状态**。短生命周期的 CLI 只携带 `session_id`。真实状态在本机 lease 文件（默认 `~/.uws/cli-sessions.json`，`UWS_CLI_SESSION_FILE` 可覆盖），不在调用方进程里。
 3. **Agent Hub 仍是对外模型网关**。Hub → WebTouch 的目标形态是本机 `exec`（与已落地的 `uws vault get` 相同，二进制由 `AHUB_WEBTOUCH_BIN` 指定）。Hub 不把 `:8000` 当对外契约。
 4. **内部 IPC 保留**。`uws-engine` gRPC（默认 `127.0.0.1:50051`）与 Chrome CDP 仍是执行器官。它们不是对外 API。
@@ -102,3 +102,23 @@ Hub 连续体继续只保存历史、channel 与站点会话引用。WebTouch �
 - CLI `close` 随后再调用 engine `CloseContext` 关页；当前只释放 lease。
 - 流式响应把 `site_conversation_id` 写回 lease。
 - 迁移窗口结束后，把 `/internal/provider/*` 的默认行为从「废弃头 + 仍响应」改为 410，并删除 Hub 侧的 HTTP 客户端。
+
+## 8. 名称退役（2026-10-31）
+
+对外命令与文档主名是 `webtouch`。下面这些名字本轮**故意保留**，避免一夜拆断本机状态和内部 import。
+
+| 仍用旧名 | 原因 |
+| --- | --- |
+| 命令 `uws` | 同一 `bin/webtouch` 的软链。argv0 为 `uws` 时 stderr 提示弃用。 |
+| `uws-engine` / `uws-gateway` / `uws-lease` | 正式产物是 `webtouch-engine` / `webtouch-gateway` / `webtouch-lease`，旧名是同目录软链。 |
+| Go module `uws` | import 路径 `uws/pkg/...`、`uws/cmd/uws`。改成 `github.com/guileen/webtouch` 会碰到每个 Go 文件、proto 生成与 ldflags，另立迁移，不在本轮做。源码目录 `cmd/uws*` 同样保留。 |
+| proto 包 `uws.v1`、文件 `uws_service.proto` | 内部 gRPC 线协议，不是对外命令名。 |
+| 环境变量 `UWS_*` | 继续有效。同义覆盖：`WEBTOUCH_ENGINE_BIN`、`WEBTOUCH_ENGINE_ADDR`、`WEBTOUCH_GATEWAY_BIN`、`WEBTOUCH_STATE_DIR`。 |
+| `~/.uws/` 与 `~/.uws-chrome-debug` | 见下方迁移计划。launchd label `com.guileen.uws-gateway` 也不改。 |
+
+### `~/.uws` 迁移计划（未执行）
+
+1. 本轮默认读写路径不变：`~/.uws/cli-sessions.json`、`sessions.json`、vault、engine pid、learned。不自动创建 `~/.webtouch`，也不复制。
+2. 以后若改默认目录，规则必须是：已有 `~/.uws` 就继续用它；只有 `~/.uws` 与 `~/.webtouch` 都不存在时才新建 `~/.webtouch`。禁止静默复制 vault 或 session。
+3. 真正改名只能走尚未实现的显式命令，并在一个发布周期内保留 `~/.uws` 到新目录的只读跳转或符号链接。
+4. Chrome profile `~/.uws-chrome-debug` 同样不在本轮改名。改名等于换浏览器身份。

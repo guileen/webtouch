@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-// uws viewer —— 观看小窗（P2，2026-09-12）。
+// webtouch viewer —— 观看小窗（P2，2026-09-12）。
 //
 // 拓扑：引擎是 Unix socket 服务端（uws-engine --viewer-socket 或 UWS_VIEWER_SOCKET），
-// 原生 Viewer 是客户端。`uws viewer status` 用一次 dial 判断引擎是否在推流；
-// `uws viewer app` 拉起本机已构建的 Viewer 壳，并把同一个 socket 路径传给它。
+// 原生 Viewer 是客户端。`webtouch viewer status` 用一次 dial 判断引擎是否在推流；
+// `webtouch viewer app` 拉起本机已构建的 Viewer 壳，并把同一个 socket 路径传给它。
 //
 // 该命令不驱动浏览器、不改变引擎状态：它只是「看一眼有没有人在推流 / 把观看器打开」。
 //
@@ -110,13 +110,13 @@ func runViewer(args []string) error {
 }
 
 func viewerGuide() string {
-	return `uws viewer —— 观看小窗
+	return `webtouch viewer —— 观看小窗
 
-  uws viewer status [socket]   查看引擎是否在推流（默认 ~/.uws/viewer.sock）
-  uws viewer app [--socket P]  启动原生 Viewer 壳（单实例：已在跑则复用；
+  webtouch viewer status [socket]   查看引擎是否在推流（默认 ~/.uws/viewer.sock）
+  webtouch viewer app [--socket P]  启动原生 Viewer 壳（单实例：已在跑则复用；
                                UWS_VIEWER_BIN / cmd/viewer/.build 下查找）
 
-引擎侧默认推流（2026-09-15 起）：uws daemon 启动引擎时默认带
+引擎侧默认推流（2026-09-15 起）：webtouch daemon 启动引擎时默认带
 --viewer-socket ~/.uws/viewer.sock；关闭推流设 UWS_VIEWER_SOCKET=off。
 `
 }
@@ -145,7 +145,7 @@ func viewerStatus(path string) error {
 	if viewerShellRunning(path) {
 		fmt.Println("观看壳：已在运行（单实例）。")
 	} else if live {
-		fmt.Println("观看壳未运行；`uws viewer app` 打开原生观看器。")
+		fmt.Println("观看壳未运行；`webtouch viewer app` 打开原生观看器。")
 	}
 	return nil
 }

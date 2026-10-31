@@ -9,7 +9,7 @@ import (
 	"syscall"
 )
 
-// runGateway 处理 `uws api` 与 `uws gateway` 命令，将所有流量与调用 100% 收口至 Go 实现的 uws-gateway。
+// runGateway 处理 `webtouch api` 与 `webtouch gateway` 命令，将所有流量与调用 100% 收口至 Go 实现的 uws-gateway。
 func runGateway(args []string) error {
 	if len(args) == 0 {
 		// 默认启动网关或输出状态
@@ -25,23 +25,25 @@ func runGateway(args []string) error {
 	case "start", "run":
 		return launchGateway(args[1:])
 	default:
-		// 直接携带参数启动网关，如 uws api --listen 127.0.0.1:8000 或 --port 8000
+		// 直接携带参数启动网关，如 webtouch api --listen 127.0.0.1:8000 或 --port 8000
 		return launchGateway(args)
 	}
 }
 
 func gatewayGuide() string {
-	return `uws api / uws gateway —— WebTouch 浏览器 provider 执行服务 (Go 原生实施源)
+	return `webtouch api / webtouch gateway —— WebTouch 浏览器 provider 执行服务 (Go 原生实施源)
 
 用法:
-  uws api [start|run] [选项...] 启动浏览器执行服务（默认 127.0.0.1:8000）
-  uws api status               检查浏览器运行时与活跃会话
-  uws api help                 查看此帮助信息
+  webtouch api [start|run] [选项...] 启动浏览器执行服务（默认 127.0.0.1:8000）
+  webtouch api status               检查浏览器运行时与活跃会话
+  webtouch api help                 查看此帮助信息
+
+弃用别名：uws api / uws gateway（同一二进制）。
 
 选项（兼容与透传给 cmd/uws-gateway）:
   --listen <addr>              HTTP 监听地址（默认 127.0.0.1:8000）
   --port <port>                HTTP 监听端口（自动归一化为 --listen）
-  --engine-addr <addr>         uws-engine gRPC 监听地址（默认 127.0.0.1:50051）
+  --engine-addr <addr>         webtouch-engine gRPC 监听地址（兼容名 uws-engine；默认 127.0.0.1:50051）
   --attach-cdp <url>           附着的 Chrome CDP 调试端点（如 http://127.0.0.1:9222；空=自动探测）
   --api-key <key>              引擎鉴权 Key（默认 uws_dev_key 或环境变量）
   --chat-timeout <duration>    单轮聊天超时时间（默认 60s）
@@ -122,18 +124,18 @@ func launchGateway(rawArgs []string) error {
 				}
 			}
 		}
-		return fmt.Errorf("uws-gateway 运行异常: %w", err)
+		return fmt.Errorf("webtouch-gateway 运行异常: %w", err)
 	}
 	return nil
 }
 
-// gatewayBinary 定位 uws-gateway 二进制产物，若未编译则尝试自动编译。
+// gatewayBinary 定位网关二进制：WEBTOUCH_GATEWAY_BIN > UWS_GATEWAY_BIN > webtouch-gateway > uws-gateway。
 func gatewayBinary() (string, error) {
-	if v := strings.TrimSpace(os.Getenv("UWS_GATEWAY_BIN")); v != "" {
+	if v := firstEnv("WEBTOUCH_GATEWAY_BIN", "UWS_GATEWAY_BIN"); v != "" {
 		if info, err := os.Stat(v); err == nil && !info.IsDir() {
 			return v, nil
 		}
-		return "", fmt.Errorf("环境变量 UWS_GATEWAY_BIN 指向的文件不存在: %s", v)
+		return "", fmt.Errorf("WEBTOUCH_GATEWAY_BIN/UWS_GATEWAY_BIN 指向的文件不存在: %s", v)
 	}
 
 	roots := []string{}
@@ -146,24 +148,29 @@ func gatewayBinary() (string, error) {
 
 	for _, root := range roots {
 		for dir := root; ; {
-			for _, candidate := range []string{
-				filepath.Join(dir, "bin", "uws-gateway"),
-				filepath.Join(dir, "uws-gateway"),
-			} {
-				if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
-					return candidate, nil
+			for _, name := range []string{"webtouch-gateway", "uws-gateway"} {
+				for _, candidate := range []string{
+					filepath.Join(dir, "bin", name),
+					filepath.Join(dir, name),
+				} {
+					if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+						return candidate, nil
+					}
 				}
 			}
 			// 检查是否到达源码根目录（包含 cmd/uws-gateway）
 			gatewaySourceDir := filepath.Join(dir, "cmd", "uws-gateway")
 			if info, err := os.Stat(gatewaySourceDir); err == nil && info.IsDir() {
-				// 尝试自动构建
-				targetBin := filepath.Join(dir, "bin", "uws-gateway")
+				// 尝试自动构建正式名，并留下兼容软链。
+				targetBin := filepath.Join(dir, "bin", "webtouch-gateway")
 				_ = os.MkdirAll(filepath.Dir(targetBin), 0755)
 				buildCmd := exec.Command("go", "build", "-o", targetBin, "./cmd/uws-gateway")
 				buildCmd.Dir = dir
 				buildCmd.Stderr = os.Stderr
 				if err := buildCmd.Run(); err == nil {
+					link := filepath.Join(dir, "bin", "uws-gateway")
+					_ = os.Remove(link)
+					_ = os.Symlink("webtouch-gateway", link)
 					return targetBin, nil
 				}
 			}
@@ -176,5 +183,5 @@ func gatewayBinary() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("未找到 uws-gateway 二进制文件；请先在项目根目录下执行 `make build` 或 `go build -o bin/uws-gateway ./cmd/uws-gateway`")
+	return "", fmt.Errorf("未找到 webtouch-gateway（兼容名 uws-gateway）；请先在项目根目录执行 `make build` 或 `go build -o bin/webtouch-gateway ./cmd/uws-gateway`")
 }

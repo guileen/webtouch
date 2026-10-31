@@ -1,4 +1,4 @@
-// uws vault —— 本地凭据库（2026-09-23 用户定案：用 age；GLOBAL #119）。
+// webtouch vault —— 本地凭据库（2026-09-23 用户定案：用 age；GLOBAL #119）。
 //
 // 口径：账号密码 / API Key 统一收口在这只本机保险箱里；**不联网、不做对外服务**，
 // 明文只在显式 `get` 时输出一次。搬凭据给别的系统时，用 `get --fingerprint`
@@ -61,7 +61,7 @@ func vaultInit(args []string, keyPath, filePath string) error {
 			fmt.Print(vaultGuide())
 			return nil
 		default:
-			return fmt.Errorf("用法: uws vault init [--force]")
+			return fmt.Errorf("用法: webtouch vault init [--force]")
 		}
 	}
 	store, recipient, err := vault.Init(keyPath, filePath, force)
@@ -74,7 +74,7 @@ func vaultInit(args []string, keyPath, filePath string) error {
 		fmt.Println("（--force 重建：旧密文已随旧 identity 一并作废）")
 	}
 	_ = store
-	fmt.Println("下一步: uws vault set <条目名> 写入第一条（值从终端无回显读取，不进 argv/历史）")
+	fmt.Println("下一步: webtouch vault set <条目名> 写入第一条（值从终端无回显读取，不进 argv/历史）")
 	return nil
 }
 
@@ -85,7 +85,7 @@ func vaultList(keyPath, filePath string) error {
 	}
 	items := store.List()
 	if len(items) == 0 {
-		fmt.Printf("凭据库为空（%s）。用 `uws vault set <条目名>` 写入第一条。\n", filePath)
+		fmt.Printf("凭据库为空（%s）。用 `webtouch vault set <条目名>` 写入第一条。\n", filePath)
 		return nil
 	}
 	fmt.Printf("凭据库 %s（%d 条；只显示指纹，不显示明文）\n", filePath, len(items))
@@ -106,7 +106,7 @@ func vaultSet(args []string, keyPath, filePath string) error {
 		switch args[i] {
 		case "--note":
 			if i+1 >= len(args) {
-				return errors.New("用法: uws vault set <名> [--note <说明>] [--stdin]")
+				return errors.New("用法: webtouch vault set <名> [--note <说明>] [--stdin]")
 			}
 			i++
 			note = args[i]
@@ -117,16 +117,16 @@ func vaultSet(args []string, keyPath, filePath string) error {
 			return nil
 		default:
 			if strings.HasPrefix(args[i], "-") {
-				return fmt.Errorf("未知参数 %s（用法: uws vault set <名> [--note <说明>] [--stdin]）", args[i])
+				return fmt.Errorf("未知参数 %s（用法: webtouch vault set <名> [--note <说明>] [--stdin]）", args[i])
 			}
 			if name != "" {
-				return errors.New("用法: uws vault set <名> [--note <说明>] [--stdin]")
+				return errors.New("用法: webtouch vault set <名> [--note <说明>] [--stdin]")
 			}
 			name = args[i]
 		}
 	}
 	if name == "" {
-		return errors.New("用法: uws vault set <名> [--note <说明>] [--stdin]")
+		return errors.New("用法: webtouch vault set <名> [--note <说明>] [--stdin]")
 	}
 	value, err := readVaultSecret(fmt.Sprintf("请输入 %q 的值（不显示、不进 argv）: ", name), fromStdin)
 	if err != nil {
@@ -156,16 +156,16 @@ func vaultGet(args []string, keyPath, filePath string) error {
 			return nil
 		default:
 			if strings.HasPrefix(a, "-") {
-				return fmt.Errorf("未知参数 %s（用法: uws vault get <名> [--fingerprint]）", a)
+				return fmt.Errorf("未知参数 %s（用法: webtouch vault get <名> [--fingerprint]）", a)
 			}
 			if name != "" {
-				return errors.New("用法: uws vault get <名> [--fingerprint]")
+				return errors.New("用法: webtouch vault get <名> [--fingerprint]")
 			}
 			name = a
 		}
 	}
 	if name == "" {
-		return errors.New("用法: uws vault get <名> [--fingerprint]")
+		return errors.New("用法: webtouch vault get <名> [--fingerprint]")
 	}
 	store, err := vault.Open(keyPath, filePath)
 	if err != nil {
@@ -173,7 +173,7 @@ func vaultGet(args []string, keyPath, filePath string) error {
 	}
 	entry, ok := store.Get(name)
 	if !ok {
-		return fmt.Errorf("%w: %s（用 `uws vault list` 看有哪些）", vault.ErrNotFound, name)
+		return fmt.Errorf("%w: %s（用 `webtouch vault list` 看有哪些）", vault.ErrNotFound, name)
 	}
 	if onlyFingerprint {
 		fmt.Printf("%s\n", vault.Fingerprint(entry.Value))
@@ -185,7 +185,7 @@ func vaultGet(args []string, keyPath, filePath string) error {
 
 func vaultRemove(args []string, keyPath, filePath string) error {
 	if len(args) != 1 || strings.HasPrefix(args[0], "-") {
-		return errors.New("用法: uws vault rm <名>")
+		return errors.New("用法: webtouch vault rm <名>")
 	}
 	store, err := vault.Open(keyPath, filePath)
 	if err != nil {
@@ -251,14 +251,14 @@ func disableTerminalEcho() (func(), error) {
 
 func vaultGuide() string {
 	keyPath, filePath := vaultPaths()
-	return fmt.Sprintf(`uws vault —— 本地凭据库（age 加密，只落本机、不联网、不做对外服务）
+	return fmt.Sprintf(`webtouch vault —— 本地凭据库（age 加密，只落本机、不联网、不做对外服务）
 
-  uws vault init [--force]           初始化（生成 identity + 空库；--force 重建并作废旧密文）
-  uws vault set <名> [--note <说明>]  写入/覆盖一条（TTY 无回显；管道时读 stdin，也可 --stdin）
-  uws vault get <名> [--fingerprint]  读出明文（唯一的明文出口）；--fingerprint 只回 sha256 前 12 位
-  uws vault list                     列出条目名 + 指纹 + 更新时间（**不显示明文**）
-  uws vault rm <名>                  删除一条
-  uws vault help                     本说明
+  webtouch vault init [--force]           初始化（生成 identity + 空库；--force 重建并作废旧密文）
+  webtouch vault set <名> [--note <说明>]  写入/覆盖一条（TTY 无回显；管道时读 stdin，也可 --stdin）
+  webtouch vault get <名> [--fingerprint]  读出明文（唯一的明文出口）；--fingerprint 只回 sha256 前 12 位
+  webtouch vault list                     列出条目名 + 指纹 + 更新时间（**不显示明文**）
+  webtouch vault rm <名>                  删除一条
+  webtouch vault help                     本说明
 
 路径：identity %s、密文 %s（UWS_VAULT_KEY / UWS_VAULT_FILE 覆盖；0600）
 口径：明文只经 get 输出一次；搬凭据给别的系统时用 --fingerprint 双端比对，

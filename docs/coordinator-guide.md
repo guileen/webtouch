@@ -1,8 +1,8 @@
 # WebTouch 协调器使用指南 (Coordinator Guide)
 
-> ⚠️ 历史定位：本指南称协调器为「任务编排大脑」。按 2026-09-02 分层定稿
-> （`docs/evidence/archive/web-touch-architecture-2026-09-02.md` 与 `docs/README.md`），编排调度属外层应用，
+> ⚠️ 历史定位：本指南称协调器为「任务编排大脑」。按 2026-09-02 分层定稿（该架构稿不在本仓库树内）与 `docs/README.md`，编排调度属外层应用，
 > 协调器是 WebTouch 的调用方；指南内的 gRPC/模板/DAG 细节仍有效，仅角色描述按定稿理解。
+> 日常入口是 `webtouch` CLI，不是本指南里的 gRPC 示例。`uws` 只是弃用别名。
 
 WebTouch 协调器（Coordinator）是系统的任务编排大脑。它接收高层级业务目标，将其转化为 DAG 动作流，通过 gRPC 协议驱动 WebTouch 引擎执行，并在步骤异常时自主触发重试、反思或重规划。
 
@@ -192,7 +192,7 @@ steps:
 VLM/打码服务计算坐标 → `ExecuteAction drag`（`challenge_slider`，坐标直发）→
 解锁后重试原步骤无缝继续；单任务求解 `vlm.max_solves` 次封顶（默认 3）。
 
-求解器由 `~/.uws/config.yaml` 的 `vlm` 段构造（`uws config set vlm_*` 写入，
+求解器由 `~/.uws/config.yaml` 的 `vlm` 段构造（`webtouch config set vlm_*` 写入，
 见 cli-and-config §2.2）：
 
 - 未配置 → 无求解器，保持既有 PAUSED 降级语义（行为兼容）；

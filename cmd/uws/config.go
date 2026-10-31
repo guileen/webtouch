@@ -57,7 +57,7 @@ var sensitiveConfigKeys = map[configKey]bool{
 	{"vlm", "api_key"}: true,
 }
 
-// runConfig 处理 `uws config set <key> <value>`。
+// runConfig 处理 `webtouch config set <key> <value>`。
 func runConfig(args []string) error {
 	if len(args) == 0 {
 		return errors.New("config: 缺少子命令（当前支持 set, get）")
@@ -65,12 +65,12 @@ func runConfig(args []string) error {
 	switch args[0] {
 	case "set":
 		if len(args) != 3 {
-			return errors.New("config: 用法 `uws config set <key> <value>`")
+			return errors.New("config: 用法 `webtouch config set <key> <value>`")
 		}
 		return configSet(args[1], args[2])
 	case "get":
 		if len(args) != 2 {
-			return errors.New("config: 用法 `uws config get <key>`")
+			return errors.New("config: 用法 `webtouch config get <key>`")
 		}
 		return configGet(args[1])
 	default:

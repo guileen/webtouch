@@ -16,9 +16,9 @@ import (
 	"uws/pkg/engine"
 )
 
-// uws daemon 是引擎（cmd/uws-engine）的生命周期管理器。
-// 用户/Agent 通过 `uws daemon start|stop|restart|status` 直接控制引擎；
-// `uws run/crawl/api` 等子命令在真正执行前会先 ensureEngine（按需拉起）。
+// webtouch daemon 是引擎（cmd/uws-engine）的生命周期管理器。
+// 用户/Agent 通过 `webtouch daemon start|stop|restart|status` 直接控制引擎；
+// `webtouch run/crawl/api` 等子命令在真正执行前会先 ensureEngine（按需拉起）。
 // 引擎以 Setsid 后台进程启动（不随 CLI 退出被 SIGHUP 杀），pid/元数据/日志落在
 // ~/.uws/（可用 UWS_ENGINE_DIR 覆盖），地址默认 127.0.0.1:50051（UWS_ENGINE_ADDR 可覆盖）。
 
@@ -40,7 +40,7 @@ func versionDrifted(running, built string) bool {
 	return semverOf(running) != semverOf(built)
 }
 
-// daemonMeta 记录被 uws CLI 托管的引擎进程元数据（pidfile 的伴生 JSON）。
+// daemonMeta 记录被 webtouch CLI 托管的引擎进程元数据（pidfile 的伴生 JSON）。
 type daemonMeta struct {
 	PID           int    `json:"pid"`
 	Addr          string `json:"addr"`
@@ -49,15 +49,26 @@ type daemonMeta struct {
 	StartedAt     string `json:"started_at"`
 }
 
+// firstEnv 返回第一个非空环境变量。新名优先，旧名 UWS_* 仍有效。
+func firstEnv(keys ...string) string {
+	for _, k := range keys {
+		if v := strings.TrimSpace(os.Getenv(k)); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 func daemonAddr() string {
-	if v := os.Getenv("UWS_ENGINE_ADDR"); v != "" {
+	if v := firstEnv("WEBTOUCH_ENGINE_ADDR", "UWS_ENGINE_ADDR"); v != "" {
 		return v
 	}
 	return daemonDefaultAddr
 }
 
 func daemonStateDir() string {
-	if v := os.Getenv("UWS_ENGINE_DIR"); v != "" {
+	// 默认目录仍是 ~/.uws。WEBTOUCH_STATE_DIR 只在显式设置时覆盖，避免静默拆成两套状态。
+	if v := firstEnv("WEBTOUCH_STATE_DIR", "UWS_ENGINE_DIR"); v != "" {
 		return v
 	}
 	if home, err := os.UserHomeDir(); err == nil {
@@ -75,24 +86,77 @@ func engineLogPath() string {
 	return filepath.Join(daemonStateDir(), "engine.log")
 }
 
-// engineBinary 解析引擎可执行文件路径：UWS_ENGINE_BIN 显式指定 > 与 uws 同目录的 bin/uws-engine > PATH。
+// engineBinary 解析引擎可执行文件：
+// WEBTOUCH_ENGINE_BIN > UWS_ENGINE_BIN > 可执行文件旁的 webtouch-engine > uws-engine > PATH。
 func engineBinary() (string, error) {
-	if v := os.Getenv("UWS_ENGINE_BIN"); v != "" {
+	if v := firstEnv("WEBTOUCH_ENGINE_BIN", "UWS_ENGINE_BIN"); v != "" {
 		if info, err := os.Stat(v); err == nil && !info.IsDir() {
 			return v, nil
 		}
-		return "", fmt.Errorf("UWS_ENGINE_BIN 指向的文件不存在: %s", v)
+		return "", fmt.Errorf("WEBTOUCH_ENGINE_BIN/UWS_ENGINE_BIN 指向的文件不存在: %s", v)
 	}
-	if exe, err := os.Executable(); err == nil {
-		cand := filepath.Join(filepath.Dir(exe), "bin", "uws-engine")
-		if info, serr := os.Stat(cand); serr == nil && !info.IsDir() {
+	seen := map[string]bool{}
+	for _, cand := range engineBinarySearchList() {
+		if seen[cand] {
+			continue
+		}
+		seen[cand] = true
+		if info, err := os.Stat(cand); err == nil && !info.IsDir() {
 			return cand, nil
 		}
 	}
-	if p, err := exec.LookPath("uws-engine"); err == nil {
-		return p, nil
+	for _, name := range []string{"webtouch-engine", "uws-engine"} {
+		if p, err := exec.LookPath(name); err == nil {
+			return p, nil
+		}
 	}
-	return "", errors.New("找不到 uws-engine 二进制：请设置 UWS_ENGINE_BIN，或把 uws-engine 放进 uws 同目录的 bin/，或加入 PATH")
+	return "", errors.New("找不到 webtouch-engine（兼容名 uws-engine）：请设置 WEBTOUCH_ENGINE_BIN 或 UWS_ENGINE_BIN，或执行 make build")
+}
+
+// engineBinaryCandidates 给出某个可执行文件目录下的查找顺序：同目录正式名、同目录兼容名，再向上一层 bin/。
+func engineBinaryCandidates(exeDir string) []string {
+	if exeDir == "" {
+		return nil
+	}
+	names := []string{"webtouch-engine", "uws-engine"}
+	dirs := []string{exeDir, filepath.Join(exeDir, "bin")}
+	parent := filepath.Dir(exeDir)
+	if parent != exeDir {
+		dirs = append(dirs, filepath.Join(parent, "bin"))
+	}
+	var out []string
+	seen := map[string]bool{}
+	for _, dir := range dirs {
+		for _, name := range names {
+			cand := filepath.Join(dir, name)
+			if seen[cand] {
+				continue
+			}
+			seen[cand] = true
+			out = append(out, cand)
+		}
+	}
+	return out
+}
+
+func engineBinarySearchList() []string {
+	var dirs []string
+	if exe, err := os.Executable(); err == nil {
+		dirs = append(dirs, filepath.Dir(exe))
+		if resolved, rerr := filepath.EvalSymlinks(exe); rerr == nil {
+			dirs = append(dirs, filepath.Dir(resolved))
+		}
+	}
+	var out []string
+	seenDir := map[string]bool{}
+	for _, dir := range dirs {
+		if dir == "" || seenDir[dir] {
+			continue
+		}
+		seenDir[dir] = true
+		out = append(out, engineBinaryCandidates(dir)...)
+	}
+	return out
 }
 
 // engineArgs 返回引擎启动参数（真实 Chrome 模式 + 在线日志落库 + 观看小窗推流；
@@ -214,7 +278,7 @@ func startEngine(addr string) error {
 		// 端口被占但 meta 缺失：可能是上次会话残留的孤儿/外部启动的引擎。
 		if ver := healthVersion(addr); ver != "" {
 			return fmt.Errorf("检测到未托管的 UWS 引擎运行于 %s（version=%s，可能是孤儿进程）。"+
-				"请先 `uws daemon stop` 或 `uws daemon restart` 回收后再启动", addr, ver)
+				"请先 `webtouch daemon stop` 或 `webtouch daemon restart` 回收后再启动", addr, ver)
 		}
 		return fmt.Errorf("端口 %s 已被非 UWS 进程占用", addr)
 	}
@@ -259,7 +323,7 @@ func startEngine(addr string) error {
 		StartedAt: time.Now().Format(time.RFC3339),
 	}
 	if err := writeMeta(meta); err != nil {
-		fmt.Fprintf(os.Stderr, "uws: 写引擎元数据失败（忽略，进程已启动）: %v\n", err)
+		fmt.Fprintf(os.Stderr, "webtouch: 写引擎元数据失败（忽略，进程已启动）: %v\n", err)
 	}
 
 	// 轮询等待监听成功（冷启动/首次构建可能 >400ms）；进程退出则快速失败。
@@ -275,7 +339,7 @@ func startEngine(addr string) error {
 			fmt.Printf("引擎已启动: pid=%d addr=%s version=%s 日志=%s\n",
 				pid, addr, meta.EngineVersion, logPath)
 			if versionDrifted(meta.EngineVersion, buildVersion) {
-				fmt.Fprintf(os.Stderr, "uws: 警告 引擎运行版本(%s) 与构建版本(%s) 不一致——可能 UWS_ENGINE_BIN 指向了旧二进制。建议 `make engine-restart`\n", meta.EngineVersion, buildVersion)
+				fmt.Fprintf(os.Stderr, "webtouch: 警告 引擎运行版本(%s) 与构建版本(%s) 不一致——可能 UWS_ENGINE_BIN 指向了旧二进制。建议 `make engine-restart`\n", meta.EngineVersion, buildVersion)
 			}
 			return nil
 		}
@@ -296,7 +360,7 @@ func stopEngine() error {
 		if ver := healthVersion(daemonAddr()); ver != "" {
 			orphan := pidByPort(daemonAddr())
 			if orphan > 0 && pidAlive(orphan) {
-				fmt.Fprintf(os.Stderr, "uws: 检测到未托管引擎（pid=%d version=%s），正在回收…\n", orphan, ver)
+				fmt.Fprintf(os.Stderr, "webtouch: 检测到未托管引擎（pid=%d version=%s），正在回收…\n", orphan, ver)
 				if err := killByPID(orphan); err != nil {
 					return fmt.Errorf("回收孤儿引擎 pid=%d 失败: %w", orphan, err)
 				}
@@ -322,18 +386,18 @@ func ensureEngine(addr string) error {
 			if addr == daemonAddr() {
 				return fmt.Errorf("%s；请先 `make engine-restart`（= build + daemon restart）", msg)
 			}
-			fmt.Fprintf(os.Stderr, "uws: 警告 %s（外部引擎，未强制重启）\n", msg)
+			fmt.Fprintf(os.Stderr, "webtouch: 警告 %s（外部引擎，未强制重启）\n", msg)
 		}
 		return nil
 	}
 	if addr != daemonAddr() {
-		return fmt.Errorf("引擎在 %s 未运行，且不是默认托管地址 %s；请先 `uws daemon start`（或设置 UWS_ENGINE_ADDR）托管该地址", addr, daemonAddr())
+		return fmt.Errorf("引擎在 %s 未运行，且不是默认托管地址 %s；请先 `webtouch daemon start`（或设置 WEBTOUCH_ENGINE_ADDR / UWS_ENGINE_ADDR）托管该地址", addr, daemonAddr())
 	}
 	return startEngine(addr)
 }
 
 func reportStatus() error {
-	fmt.Printf("uws CLI 构建版本: %s（引擎基准: %s）\n", buildVersion, engine.EngineVersion)
+	fmt.Printf("webtouch CLI 构建版本: %s（引擎基准: %s）\n", buildVersion, engine.EngineVersion)
 	meta, err := readMeta()
 	if err != nil {
 		// meta 缺失但端口有引擎 → 孤儿/外部引擎，识别真实版本。
@@ -341,7 +405,7 @@ func reportStatus() error {
 			pid := pidByPort(daemonAddr())
 			fmt.Printf("引擎运行中（未托管/孤儿）: addr=%s pid=%d version=%s\n", daemonAddr(), pid, ver)
 			if versionDrifted(ver, buildVersion) {
-				fmt.Printf("[版本漂移] 运行 %s ≠ 构建 %s，请 `uws daemon restart`（或先 `make engine-restart`）\n", ver, buildVersion)
+				fmt.Printf("[版本漂移] 运行 %s ≠ 构建 %s，请 `webtouch daemon restart`（或先 `make engine-restart`）\n", ver, buildVersion)
 			}
 			return nil
 		}
@@ -373,16 +437,16 @@ func reportStatus() error {
 	fmt.Printf("引擎 %s: addr=%s pid=%d binary=%s started=%s version=%s %s\n",
 		state, meta.Addr, meta.PID, meta.Binary, meta.StartedAt, runningVer, listen)
 	if up && versionDrifted(runningVer, buildVersion) {
-		fmt.Printf("[版本漂移] 运行 %s ≠ 构建 %s，请 `make engine-restart`（或 `uws daemon restart`）\n",
+		fmt.Printf("[版本漂移] 运行 %s ≠ 构建 %s，请 `make engine-restart`（或 `webtouch daemon restart`）\n",
 			runningVer, buildVersion)
 	}
 	return nil
 }
 
-// runDaemon 处理 `uws daemon <start|stop|restart|status>`（支持 --engine-addr/--grpc-addr 覆盖地址）。
+// runDaemon 处理 `webtouch daemon <start|stop|restart|status>`（支持 --engine-addr/--grpc-addr 覆盖地址）。
 func runDaemon(args []string) error {
 	if len(args) == 0 {
-		return errors.New("daemon: 用法 `uws daemon <start|stop|restart|status>`")
+		return errors.New("daemon: 用法 `webtouch daemon <start|stop|restart|status>`")
 	}
 	addr := daemonAddr()
 	for i := 0; i < len(args); i++ {
@@ -398,7 +462,7 @@ func runDaemon(args []string) error {
 		return stopEngine()
 	case "restart":
 		if err := stopEngine(); err != nil {
-			fmt.Fprintln(os.Stderr, "uws: "+err.Error())
+			fmt.Fprintln(os.Stderr, "webtouch: "+err.Error())
 		}
 		return startEngine(addr)
 	case "status":
@@ -408,7 +472,7 @@ func runDaemon(args []string) error {
 	}
 }
 
-// coordinatorEngineAddr 从 run/crawl/api 等子命令参数中解析引擎地址（--engine-addr，默认 UWS_ENGINE_ADDR）。
+// coordinatorEngineAddr 从 run/crawl/api 等子命令参数中解析引擎地址（--engine-addr，否则 WEBTOUCH_ENGINE_ADDR / UWS_ENGINE_ADDR）。
 func coordinatorEngineAddr(args []string) string {
 	addr := daemonAddr()
 	for i := 0; i < len(args); i++ {

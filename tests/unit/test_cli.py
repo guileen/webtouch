@@ -88,6 +88,23 @@ def test_tdd_cli_05_config_persist_secure(
     assert "<redacted>" in get_key.stdout
 
 
+def test_uws_argv0_prints_deprecation(uws_binary: Path, tmp_path: Path) -> None:
+    """二进制名叫 uws 时 stderr 提示弃用；改名为 webtouch 后不提示。stdout JSON/版本不受影响。"""
+    home = tmp_path / "home"
+    home.mkdir()
+    as_uws = _run_uws(uws_binary, home, "version")
+    assert as_uws.returncode == 0, as_uws.stderr
+    assert "已弃用" in as_uws.stderr
+    assert "webtouch CLI" in as_uws.stdout
+    renamed = tmp_path / "webtouch"
+    renamed.write_bytes(uws_binary.read_bytes())
+    renamed.chmod(0o755)
+    as_wt = _run_uws(renamed, home, "version")
+    assert as_wt.returncode == 0, as_wt.stderr
+    assert "已弃用" not in as_wt.stderr
+    assert "webtouch CLI" in as_wt.stdout
+
+
 def test_tdd_cli_08_uws_help_is_skill_friendly(uws_binary: Path, tmp_path: Path) -> None:
     """CLI 自解释：`uws help`（及无参）返回 Agent 友好手册，且与 SKILL 保证一致。"""
     home = tmp_path / "home"

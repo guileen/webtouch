@@ -170,7 +170,7 @@ const overrideGetter = (obj, prop, valueGetter) => {
 2. **一个身份只被一个账号绑**——两个账号共用同一份指纹，等于直接告诉平台「这俩是同一个人」；
 3. **身份名 = 文件名 = 档案里的 `profile_id`**——三者不一致就是数据已经坏了（加载即报错）。
 
-`Registry.Conflicts()`（`uws identity check`）另外报出**软冲突**：多个身份共用同一条代理出口配置
+`Registry.Conflicts()`（`webtouch identity check`）另外报出**软冲突**：多个身份共用同一条代理出口配置
 （出口 IP 是平台侧最强的关联信号之一，不是硬错误但必须让人看见）、绑定指向已消失的身份；也会报出
 绑定表被外部篡改后出现的重复身份。
 
@@ -187,14 +187,14 @@ const overrideGetter = (obj, prop, valueGetter) => {
   `socks5://`；Chromium 的 SOCKS5 客户端本来就把域名交给代理（`ATYP=domain`），不在本地先解析，所以这里做等价映射，
   不引入第二种传输、也不假装能单独配置 DNS 行为。
 
-CLI（`uws identity ...`，`cmd/uws/identity.go`）：
+CLI（`webtouch identity ...`，`cmd/uws/identity.go`）：
 
 ```sh
-uws identity list                      # 有哪些身份：平台/时区/代理/绑了哪个账号（凭据脱敏）
-uws identity bind <账号> <profile-id>  # 账号 ↔ 身份（1:1）
-uws identity resolve <账号>            # 账号 → 身份 → 可直接执行的运行命令
-uws identity use <profile-id>          # 打印带 --profile-id/--fingerprint 的运行命令（代理凭据脱敏）
-uws identity check                     # 共用代理出口 / 悬空绑定
+webtouch identity list                      # 有哪些身份：平台/时区/代理/绑了哪个账号（凭据脱敏）
+webtouch identity bind <账号> <profile-id>  # 账号 ↔ 身份（1:1）
+webtouch identity resolve <账号>            # 账号 → 身份 → 可直接执行的运行命令
+webtouch identity use <profile-id>          # 打印带 --profile-id/--fingerprint 的运行命令（代理凭据脱敏）
+webtouch identity check                     # 共用代理出口 / 悬空绑定
 ```
 
 诚实边界：注册表保证的是**绑定关系与档案自洽**；它管不了「你实际是不是从那条代理出去的」
@@ -247,7 +247,7 @@ uws identity check                     # 共用代理出口 / 悬空绑定
                                                │                11. 导航目标页，由目标站点决定是否接受恢复的会话
 ```
 
-CLI 的目标端默认路径是 `uws state restore <bundle> --profile-file <FingerprintProfile.json> --session <new-session> [--key-file <key>]`：它先确认本地 profile 目录为空，再以同一档案初始化尚未导航的上下文并恢复状态；随后才以同一 `--session` 交给 `uws run` / `uws goal` 导航。已有目录默认拒绝，必须由操作者确认后显式加 `--allow-existing-profile`。`export`、`inspect` 与低层 `import --target-id` 也可用。所有命令均不回显 Cookie、Bundle 内容或密钥；导出文件权限为 `0600`。不带 `--key-file` 的明文包仅适合受控临时环境。
+CLI 的目标端默认路径是 `webtouch state restore <bundle> --profile-file <FingerprintProfile.json> --session <new-session> [--key-file <key>]`：它先确认本地 profile 目录为空，再以同一档案初始化尚未导航的上下文并恢复状态；随后才以同一 `--session` 交给 `webtouch run` / `webtouch goal` 导航。已有目录默认拒绝，必须由操作者确认后显式加 `--allow-existing-profile`。`export`、`inspect` 与低层 `import --target-id` 也可用。所有命令均不回显 Cookie、Bundle 内容或密钥；导出文件权限为 `0600`。不带 `--key-file` 的明文包仅适合受控临时环境。
 
 ### 3.3 单写者租约机制（Profile Lease）
 
@@ -255,7 +255,7 @@ CLI 的目标端默认路径是 `uws state restore <bundle> --profile-file <Fing
 * 租约包含：`holder_id`, 不可打印的随机 `token`, `issued_at`, `expires_at`；续期与释放均须持有同一 token（默认 TTL 60s）。
 * 任何节点在启动指定 `profile_id` 前，必须先抢占租约；若已被抢占且心跳存活，则拒绝启动，防止本地磁盘缓存/远程会话相互踩踏。
 * 本地后端 `LeaseStore` 仅适用于具备 `O_EXCL` 原子创建语义的单一文件系统；同步盘/最终一致对象存储不安全。
-* 跨地域可部署 `bin/uws-lease`：它以同一强一致目录为事实源，提供 bearer-token 认证的 acquire/renew/release HTTP API；远程节点以 `uws-engine --lease-endpoint https://… --lease-token-file … --lease-holder-id <stable-node-id>` 接入。`uws-lease --tls-cert <cert> --tls-key <key>` 可直接提供 TLS（最低 TLS 1.2），并在绑定端口前加载、校验证书对；非回环明文监听会被拒绝，也可在私有网络的 TLS 终止层后运行。客户端拒绝非 loopback 的明文 HTTP。租约服务本身不接收或保存 Cookie、State Bundle 或密钥。
+* 跨地域可部署 `bin/webtouch-lease`（兼容软链 `bin/uws-lease`）：它以同一强一致目录为事实源，提供 bearer-token 认证的 acquire/renew/release HTTP API；远程节点以 `webtouch-engine --lease-endpoint https://… --lease-token-file … --lease-holder-id <stable-node-id>` 接入（兼容名 `uws-engine`）。`webtouch-lease --tls-cert <cert> --tls-key <key>` 可直接提供 TLS（最低 TLS 1.2），并在绑定端口前加载、校验证书对；非回环明文监听会被拒绝，也可在私有网络的 TLS 终止层后运行。客户端拒绝非 loopback 的明文 HTTP。租约服务本身不接收或保存 Cookie、State Bundle 或密钥。
 
 ### 3.4 引擎接线与密钥边界（v1.5.7）
 
@@ -266,7 +266,7 @@ CLI 的目标端默认路径是 `uws state restore <bundle> --profile-file <Fing
 
 ### 3.5 同身份纯 HTTP 请求（2026-09-13）
 
-`uws request <url> --profile-file <FingerprintProfile.json> [--state <StateBundle.json> --key-file <key>]` 为不需渲染或执行 JavaScript 的接口提供 Go HTTP client 入口，且**不启动 Chrome**。它仅复用同一档案的 User-Agent、Accept-Language、低熵 UA Client Hints 和同一 `profile_id` State Bundle 的 Cookie；`Authorization`、`Accept`、`Content-Type`、`Referer`、`Origin` 等请求上下文由调用方以 `--header` 明确提供。Cookie、UA、语言、UA Client Hints、Host 和代理认证禁止手工覆盖，避免身份自相矛盾；`--follow` 最多 10 次但只允许同 origin（scheme、host 与规范化端口；省略的 HTTP/HTTPS 默认端口等价）跳转，每一跳重新施加档案身份头，Bundle 与服务端新设 Cookie 仍仅按 jar 的域/路径范围携带。跨 origin 跳转一律拒绝，因为 Go client 不能重建浏览器 SameSite/发起页上下文。
+`webtouch request <url> --profile-file <FingerprintProfile.json> [--state <StateBundle.json> --key-file <key>]` 为不需渲染或执行 JavaScript 的接口提供 Go HTTP client 入口，且**不启动 Chrome**。它仅复用同一档案的 User-Agent、Accept-Language、低熵 UA Client Hints 和同一 `profile_id` State Bundle 的 Cookie；`Authorization`、`Accept`、`Content-Type`、`Referer`、`Origin` 等请求上下文由调用方以 `--header` 明确提供。Cookie、UA、语言、UA Client Hints、Host 和代理认证禁止手工覆盖，避免身份自相矛盾；`--follow` 最多 10 次但只允许同 origin（scheme、host 与规范化端口；省略的 HTTP/HTTPS 默认端口等价）跳转，每一跳重新施加档案身份头，Bundle 与服务端新设 Cookie 仍仅按 jar 的域/路径范围携带。跨 origin 跳转一律拒绝，因为 Go client 不能重建浏览器 SameSite/发起页上下文。
 
 SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）也不能安全放入 Go 的 Cookie jar，遇到它们即拒绝，必须回到浏览器。档案中的 HTTP/HTTPS/SOCKS5 代理会复用；SOCKS4 明确拒绝而非直连降级。高熵 hints 只在调用方确认目标已用 `Accept-CH` 协商后用 `--client-hints full`。
 
@@ -321,7 +321,7 @@ SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）�
 
 | 模式 | 语义 | 实测代价与边界（Chrome 153，2026-09-24） |
 | --- | --- | --- |
-| `shared`（**默认**） | 同指纹（同一 attach 端点 + 同一 profile）复用同一扇受管窗口；新会话的 Tab 由该窗口内**自建锚页**（`about:blank`，uws 创建、非用户页面）以中键后台开 Tab 产生；随后用 `Browser.getWindowForTarget` **读回归属**，落到别的窗口立即关闭该 Tab 并 fail-closed | 新建 Tab 会让该窗口被**前置一次**（实测前台 App「飞书」→「Google Chrome」；2026-09-24 引擎路径样本一有一无 —— 会话 3 `Antigravity`→`Google Chrome`、会话 4 未观测到）；CDP 无「移 Tab / 指定窗口开 Tab」能力，这是唯一可行路径 |
+| `shared`（**默认**） | 同指纹（同一 attach 端点 + 同一 profile）复用同一扇受管窗口；新会话的 Tab 由该窗口内**自建锚页**（`about:blank`，webtouch 创建、非用户页面）以中键后台开 Tab 产生；随后用 `Browser.getWindowForTarget` **读回归属**，落到别的窗口立即关闭该 Tab 并 fail-closed | 新建 Tab 会让该窗口被**前置一次**（实测前台 App「飞书」→「Google Chrome」；2026-09-24 引擎路径样本一有一无 —— 会话 3 `Antigravity`→`Google Chrome`、会话 4 未观测到）；CDP 无「移 Tab / 指定窗口开 Tab」能力，这是唯一可行路径 |
 | `window` | 每会话一扇专属窗口（`UWS_WINDOW_MODE=window` 显式指定；没有可共享的浏览器端点时也自动退化为它） | 建窗/搬窗**不激活**窗口（实测前台 App 不变）；窗口数随并发增长，且同指纹多窗落在**同一坐标**、后开者遮住先开者（案卷 D3） |
 | `tab`（**禁止作默认**） | `Target.createTarget{newWindow:false}` | 落点由 Chrome「最后活动窗口」决定，**实测两次都落进用户自己的窗口**（污染用户标签页），仅作历史兼容保留 |
 
@@ -329,7 +329,7 @@ SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）�
   **建窗、搬窗也不抢焦点**；唯一会抢一次焦点的是「往某窗口里新建 Tab」。
   这是 `shared` 默认化的**已定取舍**（用户口径 ① 「一个指纹至多一扇受管窗口」优先于「零前置」；「是否必然前置」按实测表述，不写成必发）：
   每起一个会话会让该指纹的窗口被前置一次，`UWS_WINDOW_MODE=window` 可显式换回零前置的多窗行为。
-- 锚页纪律：锚页只存在于 uws 自建窗口、只承载「开 Tab」一个动作；**绝不向用户页面注入脚本**（§4.1 原则不变）。
+- 锚页纪律：锚页只存在于 webtouch 自建窗口、只承载「开 Tab」一个动作；**绝不向用户页面注入脚本**（§4.1 原则不变）。
   回收规则：一个共享窗口内**只剩锚页**（会话 Tab 已关、窗内没有任何别的页面 target）才关锚页、随之回收窗口；
   窗内还有别的页面（其他会话或用户自己的）时**一律不动**。
 
@@ -348,14 +348,14 @@ SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）�
   创建/最后活动时间、锚页 target、以及该窗口的 Tab 列表（会话名、target_id、url、是否锚页、创建/最后活动时间）；
 - **活跃/不活跃**由「该 target 是否仍存在」（只读 `/json/list` 或 `Target.getTargets`）判定，
   台账本身是缓存，**不在每次动作里查 CDP**；
-- 管理入口 `uws windows list|show|prune|close`：`prune` 默认 dry-run，只清理**已消失**的自建 target 记录；
-  **只清单/只关闭 uws 自建窗口与 Tab，用户自己的窗口与 Tab 永不触碰**；
+- 管理入口 `webtouch windows list|show|prune|close`：`prune` 默认 dry-run，只清理**已消失**的自建 target 记录；
+  **只清单/只关闭 webtouch 自建窗口与 Tab，用户自己的窗口与 Tab 永不触碰**；
 - 与会话续页绑定（`~/.uws/sessions.json`）分工：后者是引擎内核的「会话→target」续页绑定（24h TTL），
   前者是浏览器层的「窗口/Tab」资源台账，两者都不作为对方的替代。
 
 **实现要点（`shared`，v1.5.x 落地）**：进程内注册表 `指纹键（attach 端点 + profile id）→ {window_id, 锚页 target}`；
 命中即复用同一扇窗口，未命中才建锚页窗（并按 §4.3 默认几何落位，**只有建窗的那个会话摆位**，后续会话不搬）；
-锚页只在 uws 自建窗口内 attach，中键以 `Input.dispatchMouseEvent`（`button=middle`）派发；
+锚页只在 webtouch 自建窗口内 attach，中键以 `Input.dispatchMouseEvent`（`button=middle`）派发；
 新 Tab 的识别判据是「相对点击前的 page target 集合**恰好多出一个**、且其 URL 仍为 `about:blank`」，
 多于一个或 URL 不符一律**拒绝认领**（宁可不共享，也不误认别人的 Tab）；归属校验失败时关掉这一个自建 Tab 并 fail-closed；
 共享路径的任何故障都**不阻塞会话**：记日志后退化为 `window`（每会话一扇专属小窗）。
@@ -369,7 +369,7 @@ SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）�
 
 **状态**：默认几何（`UWS_WINDOW_POS` 缺省）与窗口模式默认值（`shared`）= `ACTIVE`（真机验收：同指纹两会话 → 一扇窗两个 Tab）
 （已落地并真机验收，见 `docs/evidence/pilots/window-tab-governance-2026-09-24.md` 与 `shared-window-2026-09-24.md`）；
-`uws windows` 台账 = `DRAFT`（契约已定，落地任务见 `Tasks.md` T-16）。
+`webtouch windows` 台账 = `DRAFT`（契约已定，落地任务见 `Tasks.md` T-16）。
 
 ### 4.4 展开动画与「真窗口到前台」（2026-09-24 用户现场口径；改代码前先写死这几条）
 
@@ -501,9 +501,9 @@ SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）�
 | **Phase 3<br>(代码已落地 2026-09-13)** | **JS 隐蔽 Hook + 渲染噪声注入** | 1. ✅ 原型链 Hook 与 native `toString()` 保护；<br>2. ✅ 基于 PRNG seed 的 Canvas 2D / AudioContext / WebGL 确定性微扰；<br>3. ✅ CDP `Network.getAllCookies` 与指定 origin 的 LocalStorage、当前 tab SessionStorage 导出/导航前恢复为 `StateBundle`。 |
 | **Phase 4<br>(代码已落地，双节点实机验收待做)** | **租约服务 + 跨端会话恢复** | 1. ✅ Token 租约、心跳守卫与认证 HTTP 服务/客户端（`cmd/uws-lease`、`LeaseBackend`；可直接 `--tls-cert/--tls-key`，非回环明文拒绝）；<br>2. ✅ 导出/加密/同档案未导航恢复的 CLI 闭环；⏳ 两台真实节点经共同 TLS 服务的登录态验收（目标站点是否接受会话必须如实记录）。 |
 
-**补充能力（2026-09-13）**：`uws request` 可在不启动浏览器时，以同一指纹档案与可选同身份 State Bundle 发纯 HTTP 请求；它是接口资源请求的伴随能力，不替代浏览器的 TLS/HTTP2/JS/WebRTC 指纹（§3.5）。
+**补充能力（2026-09-13）**：`webtouch request` 可在不启动浏览器时，以同一指纹档案与可选同身份 State Bundle 发纯 HTTP 请求；它是接口资源请求的伴随能力，不替代浏览器的 TLS/HTTP2/JS/WebRTC 指纹（§3.5）。
 
-四项仍待真实环境取证的统一操作、通过判据与脱敏证据格式见 [真实验收运行手册](evidence/archive/fingerprint-viewer-acceptance-runbook-2026-09-13.md)；不得用无头审计、本机 TLS fixture 或 smoke 替代。
+四项仍待真实环境取证的统一操作、通过判据与脱敏证据格式曾记在仓库外的验收运行手册（本树没有 `docs/evidence/`）；不得用无头审计、本机 TLS fixture 或 smoke 替代。
 
 ---
 
@@ -589,7 +589,7 @@ SessionStorage 没有 HTTP 线上的自动等价物；分区 Cookie（CHIPS）�
 | 档案纯逻辑单测 | `go test ./pkg/fingerprint/ -count=1` | ok（**20 例 + 8 个子例**：含尾随 JSON、UA↔mobile、代理脱敏、重复身份绑定等复核项） |
 | **真 Chrome 端到端** | `go test ./pkg/browser/ -run Fingerprint -count=1 -v` | **PASS**：启动参数含 `--lang=zh-CN`、`--disable-blink-features=AutomationControlled`；页面自报 `userAgent` / `navigator.webdriver=false` / `userAgentData.platform=macOS` / `brands` 含 `Chromium:152` / 时区 `Asia/Shanghai` / `navigator.language=zh-CN` / `screen 1440×900` / `devicePixelRatio 2` / `innerWidth/Height 1440×900` 全部与档案一致 |
 | 回归 | `go test ./pkg/browser/ -run 'Viewer\|Window\|Profile\|Fingerprint'`、`./pkg/viewerhub/ ./pkg/engine/` | 全绿 |
-| CLI 实跑 | `UWS_IDENTITY_ROOT=/tmp/... uws identity list/bind/resolve/check` | 绑定 1:1 与冲突判定均按预期拒绝/报出（含共用代理出口告警） |
+| CLI 实跑 | `UWS_IDENTITY_ROOT=/tmp/... webtouch identity list/bind/resolve/check` | 绑定 1:1 与冲突判定均按预期拒绝/报出（含共用代理出口告警） |
 | 静态 | `gofmt -l` / `go build ./...` / `go vet` | 干净 |
 
 ### 7.3 当前边界（Phase 2 历史未做项已按当前状态修订）
@@ -752,7 +752,7 @@ UA-CH 的 `platform`/`brands`/`fullVersion`/`platformVersion`/`architecture`、`
 * 有头 app 窗口改为先开 `about:blank`，完成 CDP 覆盖与新文档脚本注册后才导航 `InitialURL`，消除首帧暴露真实环境的竞态。
 * `Target.setAutoAttach` 在主页面 session 上暂停 Worker，注入后恢复；真 Chrome 回归覆盖 Dedicated Worker 的 `hardwareConcurrency/deviceMemory`。
 * WebGL `UNMASKED_VENDOR_WEBGL` / `UNMASKED_RENDERER_WEBGL` 与 `emulation.hardware.webgl` 同源；Canvas 导出在副本上加噪，不再改写业务 canvas；混合函数不再截断 seed 熵，加入相隔 8,192,000 的碰撞回归。
-* `StateBundle` 已实现严格 JSON、AES-256-GCM 信封、CDP Cookie + 导航前 LocalStorage / 当前 tab SessionStorage 恢复、`uws state export|inspect|import|restore` 用户入口与两个临时 Chrome 的 localhost 往返验证；导入强制同一 `profile_id` 且首次导航后 fail-closed。`LeaseStore` 已抽象为本地或认证 HTTP 后端并接入引擎生命周期；真实多机 TLS 服务与目标站点登录态仍待取证。
+* `StateBundle` 已实现严格 JSON、AES-256-GCM 信封、CDP Cookie + 导航前 LocalStorage / 当前 tab SessionStorage 恢复、`webtouch state export|inspect|import|restore` 用户入口与两个临时 Chrome 的 localhost 往返验证；导入强制同一 `profile_id` 且首次导航后 fail-closed。`LeaseStore` 已抽象为本地或认证 HTTP 后端并接入引擎生命周期；真实多机 TLS 服务与目标站点登录态仍待取证。
 
 ### 8.4 Viewer 本机真实链路 smoke（2026-09-13）
 

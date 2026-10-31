@@ -142,8 +142,50 @@ func TestDaemonStateDirEnvOverride(t *testing.T) {
 	}
 
 	t.Setenv("UWS_ENGINE_DIR", "")
+	t.Setenv("WEBTOUCH_STATE_DIR", "")
 	if got := daemonStateDir(); filepath.Base(got) != ".uws" {
 		t.Fatalf("默认目录应为 ~/.uws，got %q", got)
+	}
+}
+
+func TestWebTouchStateDirOverridesEngineDir(t *testing.T) {
+	primary := t.TempDir()
+	legacy := t.TempDir()
+	t.Setenv("WEBTOUCH_STATE_DIR", primary)
+	t.Setenv("UWS_ENGINE_DIR", legacy)
+	if got := daemonStateDir(); got != primary {
+		t.Fatalf("WEBTOUCH_STATE_DIR 应优先，got %q", got)
+	}
+}
+
+func TestWebTouchEngineBinOverridesUWS(t *testing.T) {
+	tmp := t.TempDir()
+	primary := filepath.Join(tmp, "webtouch-engine")
+	legacy := filepath.Join(tmp, "uws-engine")
+	if err := os.WriteFile(primary, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(legacy, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("WEBTOUCH_ENGINE_BIN", primary)
+	t.Setenv("UWS_ENGINE_BIN", legacy)
+	got, err := engineBinary()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != primary {
+		t.Fatalf("应返回 WEBTOUCH_ENGINE_BIN，got %q", got)
+	}
+}
+
+func TestEngineBinaryCandidatesPreferOfficialName(t *testing.T) {
+	got := engineBinaryCandidates("/usr/local/bin")
+	if len(got) < 2 {
+		t.Fatalf("候选过少: %#v", got)
+	}
+	if got[0] != "/usr/local/bin/webtouch-engine" || got[1] != "/usr/local/bin/uws-engine" {
+		t.Fatalf("同目录应先正式名再兼容名，got %#v", got)
 	}
 }
 

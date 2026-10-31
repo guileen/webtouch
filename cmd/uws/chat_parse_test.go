@@ -23,7 +23,7 @@ func TestParseChatArgsPlain(t *testing.T) {
 }
 
 func TestParseChatArgsQuestionOnly(t *testing.T) {
-	// `uws chat "问题" --img a` → args = ["问题", "--img", "a"]（wrapPromptArgs 已去子命令 token）
+	// `webtouch chat "问题" --img a` → args = ["问题", "--img", "a"]（wrapPromptArgs 已去子命令 token）
 	dir := t.TempDir()
 	a := filepath.Join(dir, "a.png")
 	b := filepath.Join(dir, "b.png")
