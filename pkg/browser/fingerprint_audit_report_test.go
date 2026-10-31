@@ -138,12 +138,24 @@ func auditRepoRoot(t *testing.T) string {
 		t.Fatalf("取工作目录失败: %v", err)
 	}
 	for i := 0; i < 8; i++ {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+		if _, statErr := os.Stat(filepath.Join(dir, "go.mod")); statErr == nil {
 			return dir
 		}
-		dir = filepath.Dir(dir)
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
 	}
-	return "/Users/gl/hz/aliyun-terraform/labs/agent-tools/webtouch"
+	t.Fatal("从工作目录向上未找到 go.mod，无法定位仓库根")
+	return ""
+}
+
+func TestAuditRepoRootDerivesFromModule(t *testing.T) {
+	root := auditRepoRoot(t)
+	if _, err := os.Stat(filepath.Join(root, "go.mod")); err != nil {
+		t.Fatalf("仓库根应含 go.mod: %s (%v)", root, err)
+	}
 }
 
 func auditEvalJSON(ctx context.Context, s *cdpSession, expr string, dst *map[string]any) error {

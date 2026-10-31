@@ -15,8 +15,15 @@
 import glob, io, json, os, statistics as st
 from collections import Counter
 
+
+def episode_paths():
+    """Episode 日志：UWS_EPISODES_DIR，否则 $HOME/.uws/episodes。"""
+    root = os.environ.get('UWS_EPISODES_DIR') or os.path.join(os.path.expanduser('~'), '.uws', 'episodes')
+    return sorted(glob.glob(os.path.join(root, 'episodes-*.jsonl')))
+
+
 rows = []
-for f in sorted(glob.glob('/Users/gl/.uws/episodes/episodes-*.jsonl')):
+for f in episode_paths():
     for line in io.open(f, encoding='utf-8'):
         line = line.strip()
         if not line:
@@ -94,7 +101,7 @@ print('※ GT 恒在 index=0 ＝锚点投影的构造结果；量召回必须另
 # 真实公开页上后者几乎恒空（L1 需探针显式置信度、L2 需 KB 同义词背书；在线 ONNX 未接线）。
 by_day = {}
 dec_pool_pos, dec_pool_zero = Counter(), Counter()
-for f in sorted(glob.glob('/Users/gl/.uws/episodes/episodes-*.jsonl')):
+for f in episode_paths():
     d0 = os.path.basename(f)[len('episodes-'):-len('.jsonl')]
     for line in io.open(f, encoding='utf-8'):
         line = line.strip()

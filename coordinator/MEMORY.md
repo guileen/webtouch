@@ -167,7 +167,7 @@
     argparse `epilog`；`main()` 顶 layer 兜底 `EngineError`/`OSError`/`ValueError`/`Exception`
     并打印 `_engine_hint()`（状态码→对策）；`run_crawl`/`run_api` 内部 except 补提示行。
 - **顶层同步**：`.agents/skills/uws-browser-agent` 曾是断链（指向已迁走的
-  `gl/agent-tools/webtouch`），已修到 `labs/agent-tools/webtouch/.agents/skills/uws-browser-agent`；
+  `agent-tools/webtouch`），已修到 `labs/agent-tools/webtouch/.agents/skills/uws-browser-agent`；
   并在 `.codex/skills/`、`.claude/skills/` 补发现链（指向 `.agents/skills/uws-browser-agent`）。
   ⚠️ `.agents/`、`.codex/` 在代码沙箱里**只读**，需升级权限才能改软链。
 - **skill 极简**：`uws-browser-agent/SKILL.md` 由 183 行压到 ~40 行——保留触发词 +「先

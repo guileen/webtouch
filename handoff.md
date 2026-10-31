@@ -4,10 +4,11 @@
 > 目标与终局红线 → [`Goals.md`](Goals.md)；任务、依赖、验收 → [`Tasks.md`](Tasks.md)；项目唯一必读入口记忆与结论事实源 → [`GLOBAL.md`](GLOBAL.md)（§4 条目 #101–#129 是本线关键决策）。
 > 跨项目协调与全仓工作树风险 → [`labs/handoff.md`](../../handoff.md)；本文件之前的流水（含 2026-09-14 起各轮）→ [`labs/handoff-归档.md`](../../handoff-归档.md)。
 > QA Studio 线 2026-09-17 的快照另存 [`.mem/handoff.md`](.mem/handoff.md)（**遗留**，状态仍有效、只作考古）；更早的项目归档在 `.mem/handoff-归档.md`。
-> 本文件最后被写：2026-10-31 07:48；当前实现值与待验项见下方，历史过程见证据及归档。
+> 本文件最后被写：2026-10-31 08:13；当前实现值与待验项见下方，历史过程见证据及归档。
 
 ## 本线当前值（2026-10-31）
 
+- **公开仓本机路径去标识（2026-10-31 08:13，已接到 `T-38` 之后）**：仓内 `/Users/<user>` 绝对路径与用户名目录已改为 `$HOME`、`<HOME>`、`<project-root>` / `<labs-root>`；脚本用 `os.path.expanduser('~')` / `UWS_EPISODES_DIR`、`__file__` 上溯仓库根（`WEBTOUCH_ROOT` 可覆盖）；指纹审计测试从 cwd 上溯 `go.mod`。profile 守卫仍拒绝宿主 `/Users/*`，自检夹具账号为 `example`。
 - **对外 CLI + 本机 session lease（2026-10-31，`T-38` / `TDD-API-14`，DONE）**：对外能力面改为 `webtouch` / `uws session`（create / use / show / list / close，stdout `webtouch.cli.session.v1`）。状态在 `~/.uws/cli-sessions.json`：active → 空闲 10 分钟 idle（可恢复）→ 显式 close 或滑动 24h 关闭；死亡 `owner_pid` 可回收。同账号必须复用已绑定 Profile，`@vault:` 拒绝进 argv 与 lease。Hub 只记账 `hub.channel` 与 `hub.site_conversation_id`。`:8000 /internal/provider/*` 为迁移期：默认带废弃头仍响应；`UWS_PROVIDER_HTTP=410` 时 410 且不进引擎；已知 lease 关闭则 409。契约 [`docs/cli-session-contract-2026-10-31.md`](docs/cli-session-contract-2026-10-31.md)。**未做**：Hub 改 exec、CLI close 关页、流式回写站点对话 id。
 
 - **Gemini Web Veo 3.1 视频生成全链路闭环落地（2026-10-31，指令「gemini web first」与「生成测试视频」已闭环，DONE）**：
@@ -16,8 +17,8 @@
   ② **网关视频增强**：[`apps/gateway/video.go`](apps/gateway/video.go) 提供 `IsVideoModel`（识别 veo/seedance/jimeng）、`TimeoutForModel`（放宽至 300s）、`AdaptVideoPrompt`（自适应补充 Veo 触发词）、`IsVideoStillGenerating`（识别页面中间渲染态防止轮询提前退出）、`ExtractAndDownloadVideoFromDOM`（页面上下文 fetch 授权 Blob 并直写本地规避外部 302 重定向）；
   ③ **传输层与动作引擎加固**：`apps/gateway/chat_direct.go` 视频模型直发分流退回 DOM；`pkg/engine/service_action.go` 物理交互遇 SPA 软路由静息超时重置验证器放行派发；`pkg/engine/knowledge.go` 接入新版 Angular `<model-response>`；
   ④ **真机验收与交付**：经 Agent Hub `POST 127.0.0.1:18080/v1/chat/completions` 调用 `webtouch/gemini-veo`，Gemini 真实生成 720p 24fps 10s 带音轨 MP4，产物落盘至：
-    - [`~/.uws/artifacts/videos/veo_anxiety_film_shot1.mp4`](file:///Users/gl/.uws/artifacts/videos/veo_anxiety_film_shot1.mp4)（5.37 MB）
-    - [`labs/aigc/runs/anxiety-film/artifacts/veo-shot-01.mp4`](file:///Users/gl/hz/aliyun-terraform/labs/aigc/runs/anxiety-film/artifacts/veo-shot-01.mp4)
+    - `$HOME/.uws/artifacts/videos/veo_anxiety_film_shot1.mp4`（5.37 MB）
+    - `<labs-root>/aigc/runs/anxiety-film/artifacts/veo-shot-01.mp4`
   ⑤ **单测**：网关 340 passed，引擎 215 passed。运行版本 `v1.5.5+f686c433`。
 
 - **Gemini 网页模型选择器非物理菜单档位修复（2026-10-31，本轮）**：契约 §6 与 Tasks.md 明确 Gemini 页面选择器实测仅 3 档（3.5 Flash-Lite / 3.8 Flash / 3.1 Pro），Veo 3.1 (`gemini-veo`) 与 Imagen 3 (`gemini-imagen`) 属生成式多模态能力而非物理菜单项。此前 `resolveGeminiModel` 盲目返回族名导致物理点击 `Veo` 菜单触发 `model_switch_failed`。现已按契约修复：对生成能力模型返回空（不触发下拉菜单物理点击，保持当前/默认文本模型），避免无谓点击报错；单测 `TestGeminiProviderModelResolution` 与网关 325 项单测全绿通过。真实视频生成链路归属 `aigc/` 管线（`video_provider.py`，模型 `veo-3.1-fast-generate-preview` / `wan2.6-t2v`）。
