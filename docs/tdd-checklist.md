@@ -24,6 +24,8 @@
 | 性能/基准测试 | 延迟、内存、并发红线（§9） | `benchmarks/...` |
 | 安全/模糊测试 | 注入、边界、伪造回调（§5/§7） | `tests/security/...` |
 
+> 本仓 CI 的 Python 范围及缺失模块的历史测试排除清单见 `tests/README.md` 和 `pyproject.toml`；历史勾选不代表本次 CI 验证。
+
 ### 0.3 CI 门禁与本地命令
 
 - 初始化与固定版本见 [贡献指南](contributing.md)；`make ci` 和 `make pre-commit` 执行相同检查：gofmt、分层与消费方审计、Proto 一致性、全包 Go 与 Python 基础测试、构建及版本自检。

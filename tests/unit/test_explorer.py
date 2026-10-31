@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def isolated_attach(monkeypatch):
+    """Fake-engine tests never consult or launch a host browser."""
+    monkeypatch.setattr("coordinator.cli.resolve_attach", lambda *args, **kwargs: "http://127.0.0.1:9222")
+
 from coordinator.cli import create_parser, run_explore
 from coordinator.engine_client import InitResult
 from coordinator.explorer import (

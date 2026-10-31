@@ -101,7 +101,13 @@ def test_unreachable_debug_refuses_to_launch_without_explicit_permission(
         attach.resolve_attach("debug")
 
 
-def test_default_launches_when_explicitly_authorized(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture
+def isolated_default_profile(monkeypatch, tmp_path):
+    monkeypatch.setattr(attach, "default_profile_dir", lambda: tmp_path)
+    monkeypatch.setattr(attach, "chrome_bin", lambda: "/fake/chrome")
+
+
+def test_default_launches_when_explicitly_authorized(monkeypatch: pytest.MonkeyPatch, isolated_default_profile) -> None:
     calls: list[tuple] = []
     monkeypatch.setenv(attach.CHROME_LAUNCH_PERMISSION_ENV, "1")
     monkeypatch.setattr(attach, "probe_cdp", lambda url, timeout=1.2: False)
@@ -131,7 +137,7 @@ def test_unreachable_default_refuses_to_launch_without_explicit_permission(
         attach.resolve_attach("default")
 
 
-def test_default_running_requires_confirm(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_running_requires_confirm(monkeypatch: pytest.MonkeyPatch, isolated_default_profile) -> None:
     monkeypatch.setenv(attach.CHROME_LAUNCH_PERMISSION_ENV, "1")
     monkeypatch.setattr(attach, "probe_cdp", lambda url, timeout=1.2: False)
     monkeypatch.setattr(attach, "is_chrome_running", lambda profile: True)
@@ -140,7 +146,7 @@ def test_default_running_requires_confirm(monkeypatch: pytest.MonkeyPatch) -> No
         attach.resolve_attach("default")
 
 
-def test_default_running_confirmed_restarts(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_running_confirmed_restarts(monkeypatch: pytest.MonkeyPatch, isolated_default_profile) -> None:
     running = {"value": True}
 
     def fake_running(profile: Path) -> bool:

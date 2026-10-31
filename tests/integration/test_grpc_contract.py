@@ -65,13 +65,13 @@ def _generate_mtls_pki(dest: Path) -> dict[str, Path]:
              "-subj", "/CN=uws-test-ca",
              "-keyout", str(dest / "ca.key"), "-out", str(dest / "ca.crt"))
     # 服务端证书：SAN 必须含 127.0.0.1，否则 gRPC 客户端主机名校验失败
+    (dest / "server.ext").write_text("subjectAltName=DNS:localhost,IP:127.0.0.1\n")
     _openssl("req", "-newkey", "rsa:2048", "-nodes",
              "-subj", "/CN=localhost",
-             "-keyout", str(dest / "server.key"), "-out", str(dest / "server.csr"),
-             "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1")
+             "-keyout", str(dest / "server.key"), "-out", str(dest / "server.csr"))
     _openssl("x509", "-req", "-in", str(dest / "server.csr"),
              "-CA", str(dest / "ca.crt"), "-CAkey", str(dest / "ca.key"),
-             "-CAcreateserial", "-days", "2", "-copy_extensions", "copy",
+             "-CAcreateserial", "-days", "2", "-extfile", str(dest / "server.ext"),
              "-out", str(dest / "server.crt"))
     # 合法客户端证书（根 CA 签发）
     _openssl("req", "-newkey", "rsa:2048", "-nodes",

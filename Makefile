@@ -121,7 +121,7 @@ ci: lint audit-layers audit-consumers proto-check test build
 test-go:
 	$(GO) test -count=1 -v ./...
 
-## Python 测试（单元 + 集成 + 安全；骨架阶段全 skip，收集与运行均为绿灯）
+## Python 测试（本仓单元 + 集成 + 安全；缺失模块的历史测试见 pytest 排除清单）
 test-py:
 	$(PYTEST) tests/unit tests/integration tests/security -q
 

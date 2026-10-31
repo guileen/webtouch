@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"uws/apps/gateway/recipe"
-	"uws/pkg/browser"
+	"uws/pkg/contract"
 )
 
 // S2 嗅探编译的 fixture（形状取自 2026-10-02 千问真机抓存，值一律用假值，
@@ -20,8 +20,8 @@ const (
 		"&bl=" + sniffFixtureBuild + "&_ts=1790913138770&_nonce=279652961&_sign=" + sniffFixtureSign
 )
 
-func sniffFixtureCapture() browser.RecipeCapture {
-	return browser.RecipeCapture{
+func sniffFixtureCapture() contract.RecipeCapture {
+	return contract.RecipeCapture{
 		CapturedAt:   "2026-10-02T12:00:00+08:00",
 		RequestID:    "1001.1",
 		ResourceType: "Fetch",
@@ -37,7 +37,7 @@ func sniffFixtureCapture() browser.RecipeCapture {
 			"Authorization": "[REDACTED]",
 		},
 		PostData: `{"limit":50,"next_token":"","sort_field":"modifiedTime"}`,
-		Response: &browser.RecipeCaptureResponse{Status: 200, MimeType: "application/json"},
+		Response: &contract.RecipeCaptureResponse{Status: 200, MimeType: "application/json"},
 	}
 }
 
@@ -56,7 +56,7 @@ func sniffFixturePage(withState bool) *recipe.PageContextSnapshot {
 // 有页面态：值回溯拿到真实 producer，且 match 只写页面路由。
 func TestSniffCompileWithPageState(t *testing.T) {
 	res, err := CompileCaptureRecipe(SniffOptions{Site: "qianwen", Page: sniffFixturePage(true)},
-		[]browser.RecipeCapture{sniffFixtureCapture()})
+		[]contract.RecipeCapture{sniffFixtureCapture()})
 	if err != nil {
 		t.Fatalf("编译失败: %v", err)
 	}
@@ -115,7 +115,7 @@ func TestSniffCompileWithPageState(t *testing.T) {
 // 无页面态：启发式归因必须留痕，且不假装是页面态证据。
 func TestSniffCompileWithoutPageStateMarksHeuristic(t *testing.T) {
 	res, err := CompileCaptureRecipe(SniffOptions{Site: "qianwen", Page: sniffFixturePage(false)},
-		[]browser.RecipeCapture{sniffFixtureCapture()})
+		[]contract.RecipeCapture{sniffFixtureCapture()})
 	if err != nil {
 		t.Fatalf("编译失败: %v", err)
 	}
@@ -140,16 +140,16 @@ func TestSniffCompileWithoutPageStateMarksHeuristic(t *testing.T) {
 
 // 同站多份快照：优先选响应为事件流的那一份作主请求。
 func TestSniffCompilePrefersEventStreamCapture(t *testing.T) {
-	chat := browser.RecipeCapture{
+	chat := contract.RecipeCapture{
 		RequestID: "2002.9", ResourceType: "Fetch", Method: "POST",
 		URL:      "https://api.example.com/api/v2/chat?biz_id=ai_qwen",
 		Headers:  map[string]string{"Content-Type": "application/json"},
 		PostData: `{"messages":[{"content":"hi"}]}`,
-		Response: &browser.RecipeCaptureResponse{Status: 200, MimeType: "text/event-stream; charset=utf-8"},
+		Response: &contract.RecipeCaptureResponse{Status: 200, MimeType: "text/event-stream; charset=utf-8"},
 	}
 	other := sniffFixtureCapture()
 	res, err := CompileCaptureRecipe(SniffOptions{Site: "qianwen", Page: sniffFixturePage(true)},
-		[]browser.RecipeCapture{other, chat})
+		[]contract.RecipeCapture{other, chat})
 	if err != nil {
 		t.Fatalf("编译失败: %v", err)
 	}
@@ -167,10 +167,10 @@ func TestSniffCompilePrefersEventStreamCapture(t *testing.T) {
 // 缺页面态 URL 必须 fail-closed（不能拿 API 路径凑 match）。
 func TestSniffCompileRequiresPageURL(t *testing.T) {
 	if _, err := CompileCaptureRecipe(SniffOptions{Site: "qianwen", Page: &recipe.PageContextSnapshot{}},
-		[]browser.RecipeCapture{sniffFixtureCapture()}); err == nil {
+		[]contract.RecipeCapture{sniffFixtureCapture()}); err == nil {
 		t.Fatal("缺页面态 URL 时应报错")
 	}
-	if _, err := CompileCaptureRecipe(SniffOptions{Site: ""}, []browser.RecipeCapture{sniffFixtureCapture()}); err == nil {
+	if _, err := CompileCaptureRecipe(SniffOptions{Site: ""}, []contract.RecipeCapture{sniffFixtureCapture()}); err == nil {
 		t.Fatal("缺 site 时应报错")
 	}
 }
@@ -178,7 +178,7 @@ func TestSniffCompileRequiresPageURL(t *testing.T) {
 // 编译产物序列化后不得出现任何凭据明文（凭据头值 / 签名值）。
 func TestSniffCompileNeverEmitsCredentialPlaintext(t *testing.T) {
 	res, err := CompileCaptureRecipe(SniffOptions{Site: "qianwen", Page: sniffFixturePage(true)},
-		[]browser.RecipeCapture{sniffFixtureCapture()})
+		[]contract.RecipeCapture{sniffFixtureCapture()})
 	if err != nil {
 		t.Fatalf("编译失败: %v", err)
 	}

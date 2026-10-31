@@ -1,5 +1,7 @@
 # WebTouch · 项目交接（webtouch 状态域）
 
+- **开源合格化（2026-10-31 04:13 PDT）**：PR #5 已合；PR #6 分层契约与 Python 测试设施已修，本地 `make ci` 通过（Python 169 passed / 11 skipped），待推送及双平台 CI；C 干净证据待 B 合并后实施。详见 `Tasks.md` T-OSS 与外部实施报告。
+
 > **定位（2026-09-23 04:21 起为后续标准）**：本文件是 WebTouch 的**状态域（AOF）**——当前值 + 指针 + 本线不可推断的硬约束，目标 ≤150 行；接力写在这里，不再写进 `labs/handoff.md`。
 > 目标与终局红线 → [`Goals.md`](Goals.md)；任务、依赖、验收 → [`Tasks.md`](Tasks.md)；项目唯一必读入口记忆与结论事实源 → [`GLOBAL.md`](GLOBAL.md)（§4 条目 #101–#129 是本线关键决策）。
 > 跨项目协调与全仓工作树风险 → [`labs/handoff.md`](../../handoff.md)；本文件之前的流水（含 2026-09-14 起各轮）→ [`labs/handoff-归档.md`](../../handoff-归档.md)。

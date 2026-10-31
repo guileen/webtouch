@@ -1,3 +1,5 @@
+> 本仓默认 Python 收集范围为 unit / integration / security；依赖本仓缺失的 pipeline、learning、benchmarks 的历史文件在 pyproject.toml 中逐项排除，以下历史映射不代表这些能力已在本仓验证。
+
 # UWS 测试骨架说明
 
 > 目标：docs/tdd-checklist.md（V1.1）是验收标准的唯一索引；本骨架保证
