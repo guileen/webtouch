@@ -46,10 +46,10 @@ func gatewayGuide() string {
   --api-key <key>              引擎鉴权 Key（默认 uws_dev_key 或环境变量）
   --chat-timeout <duration>    单轮聊天超时时间（默认 60s）
 
-核心端点:
-  POST /internal/provider/chat       Agent Hub 专用网页模型执行契约
-  POST /internal/provider/responses  Agent Hub 专用 Responses 执行契约
-  GET  /internal/provider/models     Agent Hub 查询可用网页模型
+核心端点（迁移期，对外契约已改为 CLI webtouch session）:
+  POST /internal/provider/chat       已废弃；迁移期仍响应，UWS_PROVIDER_HTTP=410 时退役
+  POST /internal/provider/responses  已废弃；同上
+  GET  /internal/provider/models     已废弃；同上
   POST /v1/chat/completions    已退役；客户端模型 API 请使用 Agent Hub
   POST /v1/responses           已退役；客户端模型 API 请使用 Agent Hub
   GET  /v1/models              已退役；客户端模型目录请使用 Agent Hub

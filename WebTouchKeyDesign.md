@@ -6,7 +6,7 @@
 
 ## 一、 项目本质与四大终局目标 (JTBD)
 
-**WebTouch 是浏览器执行与站点身份底座：管理网站目录、网站账号与 Vault，维持账号和 Profile/指纹的稳定绑定，并为 Agent Hub 执行网页交互。它同时提供桌面自动化与 Vibe Coding 交付验收能力。客户端模型 API 与 CLI/Web 连续体归 Agent Hub，职责边界见[跨项目唯一规范](docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。**
+**WebTouch 是浏览器执行与站点身份底座：管理网站目录、网站账号与 Vault，维持账号和 Profile/指纹的稳定绑定，并为 Agent Hub 执行网页交互。它同时提供桌面自动化与 Vibe Coding 交付验收能力。客户端模型 API 与 CLI/Web 连续体归 Agent Hub。WebTouch 自己的对外能力面是 CLI（`webtouch` / `uws`）：session 生命周期放在本机 lease，CLI 只携带 `session_id`。职责边界见[跨项目唯一规范](docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)，session 契约见 [`docs/cli-session-contract-2026-10-31.md`](docs/cli-session-contract-2026-10-31.md)。**
 
 用户雇佣 WebTouch 解决四大刚性终局诉求：
 
@@ -147,11 +147,12 @@ WebTouch 的算法内核与 Labs 内的 `memory_systems`（记忆系统）及 `s
 - **浏览器执行事实源**：Chrome CDP 附着、多 Tab 会话隔离、账号/Profile/指纹绑定、Vault 与站点交互收敛至 Go 二进制 [`cmd/uws-gateway`](cmd/uws-gateway/main.go) + [`apps/gateway`](apps/gateway)。客户端 OpenAI 兼容 API、官方模型 provider 路由与 CLI/Web 连续体由 Agent Hub 持有；WebTouch 旧 OpenAI 路径仅在迁移期兼容保留；
 - **Python 职能纯化**：Python 代码完全退出常驻 API 服务，回归其最擅长的核心职能：**离线数据科学实验室**（负责 CC 语料处理、组件基因拓扑提取、模型训练与离线评测）。
 
-### 3. 三位一体协同运行拓扑
-系统日常运行由三个轻量实体协同构成：
+### 3. 运行拓扑
+对外只有 CLI。内部仍由这些实体协同，它们都不是对外 API：
 1. **调试宿主 Chrome (CDP :9222)**：承载用户真实身份与登录凭证，运行于专用沙箱配置目录；
-2. **物理执行引擎 (`uws-engine` gRPC :50051)**：接管底层 CDP 链路、注入抗风控指纹、执行页内脚本与确定性动作重试；
-3. **浏览器 provider 执行服务 (`uws-gateway` HTTP :8000)**：接受 Agent Hub 的网页模型执行请求，自动探测本地 9222 端口并协同引擎；客户端模型请求应发往 Agent Hub。配套脚本 `./scripts/start_bus.sh` 一键协同拉起浏览器运行时。
+2. **物理执行引擎 (`uws-engine` gRPC :50051)**：内部 IPC。接管底层 CDP 链路、注入抗风控指纹、执行页内脚本与确定性动作重试；
+3. **本机 session lease**（默认 `~/.uws/cli-sessions.json`）：持有 `session_id` 的生命周期。`webtouch session create|use|close` 读写它；
+4. **浏览器执行服务 (`uws-gateway` HTTP :8000)**：迁移期内部入口，`/internal/provider/*` 已废弃，不再当对外契约。客户端模型请求发往 Agent Hub，Hub 以本机 exec CLI 调用 WebTouch。
 
 ---
 

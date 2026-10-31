@@ -94,7 +94,7 @@ func busStatus() error {
 	gatewayAddr := "127.0.0.1:8000"
 	gatewayLive := probePort(gatewayAddr, 300*time.Millisecond)
 	if gatewayLive {
-		fmt.Printf("✓ 浏览器执行服务 (HTTP :8000) : 运行中 (WebTouch provider 就绪)\n")
+		fmt.Printf("✓ 浏览器执行服务 (HTTP :8000) : 运行中（迁移期；对外契约是 CLI session）\n")
 		// 尝试获取活跃会话
 		printGatewaySessions()
 	} else {

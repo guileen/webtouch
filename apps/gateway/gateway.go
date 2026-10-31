@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"uws/pkg/clisession"
 	"uws/pkg/contract"
 )
 
@@ -100,6 +101,8 @@ type Options struct {
 	ChromeProfile string
 	// BrowserHostInterval 是宿主探活周期（0 = 默认 15s / 由 UWS_BROWSER_HOST_INTERVAL 覆盖；<0 = 不探活）。
 	BrowserHostInterval time.Duration
+	// CLISessions 是对外 CLI 的本机 lease。nil 表示迁移期 HTTP 不校验 CLI 句柄。
+	CLISessions *clisession.Store
 }
 
 // ToolFunction 描述可供模型调用的函数结构。
@@ -293,6 +296,8 @@ type Gateway struct {
 	browserHost *BrowserHost
 	// readiness 记录「一次真实推理」的端到端证据（进程 ≠ 可用，见 readiness.go）。
 	readiness readinessState
+	// cliSessions 是 CLI 对外句柄的本机 lease。nil = 不校验（迁移期旧调用）。
+	cliSessions *clisession.Store
 }
 
 // NewGateway 构造网关；cfg 必须已 Normalize。
@@ -334,6 +339,7 @@ func NewGateway(cfg *Config, opts Options) (*Gateway, error) {
 		engines:            make(map[string]EngineClient),
 		sessions:           make(map[string]*Session),
 		locks:              make(map[string]*sync.Mutex),
+		cliSessions:        opts.CLISessions,
 	}
 	// 浏览器宿主纳管（2026-10-01「关窗 ≠ 断链路」）：attach-cdp 非空即纳管，
 	// 探活周期可由 Options 或 UWS_BROWSER_HOST_INTERVAL 覆盖；<0 = 只报告不探活。

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"uws/apps/gateway"
+	"uws/pkg/clisession"
 )
 
 func main() {
@@ -88,6 +89,13 @@ func main() {
 				probeErr, gateway.ChromeLaunchPermissionEnv)
 		}
 	}
+	var cliSessions *clisession.Store
+	if opened, openErr := clisession.Open(clisession.DefaultPath()); openErr != nil {
+		logger.Printf("CLI session lease 未打开（迁移期 HTTP 不校验句柄）: %v", openErr)
+	} else {
+		cliSessions = opened
+		logger.Printf("CLI session lease: %s（对外契约是 CLI；/internal/provider 仅迁移期）", opened.Path())
+	}
 	gw, err := gateway.NewGateway(&cfg, gateway.Options{
 		EngineAPIKey: key,
 		AttachCDP:    *attachCDP,
@@ -95,6 +103,7 @@ func main() {
 		VideoTimeout: *videoTimeout,
 		AuthCheckTTL: *authCheckTTL,
 		Logger:       logger,
+		CLISessions:  cliSessions,
 	})
 	if err != nil {
 		log.Fatalf("初始化网关失败: %v", err)

@@ -578,6 +578,7 @@
   **2026-10-01 真机（旁路 `:18300`，构建自 `1bbcc36c`）**：C5 PASS；C1 FAIL（L0 直发不跳会话页 ⇒ 按 §9 冻结口径回 `null`，属合规）、C2/C4 连带 FAIL、C3 未跑到（S3 另以直接读数 28 条为证）——判据/契约层待 **A/B 裁定**后重跑收口。证据 `docs/evidence/pilots/site-conversation-continuity-2026-10-01.md`。
 
   **2026-10-02 02:01 DeepSeek 覆盖点亮（`4b1760c8`）**：取值来源③（recipe `producer: session_mint` 且 `echo: true` 的槽位回显）＋地址对齐 ⇒ 真机探针 `deepseek-web` **C1–C5 全 PASS**（PASS 5 / FAIL 0 / NOT_IMPL 0，`t31-acceptance-20261002-015919.log`）。**TDD-API-13 两站（Gemini＋DeepSeek）同时达标**；废弃下方「DeepSeek 覆盖记为遗留项」的表述。
+- [x] **TDD-API-14**（P0/契约，2026-10-31）：对外 session 走 CLI lease。`create → use → close` 复用同一 `session_id` 与 Profile；未绑定账号 `profile_unbound` 且不落盘；`@vault:` 不进 lease 与错误 JSON；空闲唤醒、死亡 owner 可回收、超过 LeaseTTL 关闭。`/internal/provider/*` 带废弃头；`UWS_PROVIDER_HTTP=410` 返回 `provider_http_retired` 且不调用引擎；已关闭 CLI lease 的 provider chat 返回 409 且不进引擎。Hub 可落账字段只有 `hub.channel` 与 `hub.site_conversation_id`。（点亮：`pkg/clisession/store_test.go`、`cmd/uws/session_test.go`、`apps/gateway/cli_session_gate_test.go`）
 ### 7.1 Playwright 适配层
 
 - [x] **TDD-ADAPTER-01**（P1/M6A/单元）：适配层映射：`page.fill` / `page.click` / `page.wait_for_navigation` 正确转换为 `ExecuteAction`（`target_semantic` / `expected_action` / `value`），用 mock gRPC stub 验证，无需真实浏览器。（2026-08-20 点亮：`coordinator/playwright_adapter.py` 包装 `EngineClient` 协议——fill→input、click→click、wait_for_navigation→wait/NAVIGATED，每次调用生成独立 `intent_id`；`tests/unit/test_adapter.py` FakeEngine 断言字段映射与幂等消费）

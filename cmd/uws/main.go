@@ -111,6 +111,12 @@ func main() {
 			fmt.Fprintln(os.Stderr, prog+": "+err.Error())
 			os.Exit(1)
 		}
+	case "session":
+		// 对外 session 生命周期：句柄进出 CLI，状态在本机 lease。
+		if err := runSession(args[1:]); err != nil {
+			fmt.Fprintln(os.Stderr, prog+": "+err.Error())
+			os.Exit(1)
+		}
 	case "inspect":
 		// WebTouch 有界 Provider 入口：页面有界体检、脱敏与确定性证据包输出
 		if err := runInspect(args[1:]); err != nil {
@@ -164,7 +170,9 @@ func usage() {
   uws explore <url> ...          启发式探索站点，生成导航图/功能报告（python3 -m coordinator.cli explore ...）
   uws probe [--url <URL>] ...    附着持久调试 Chrome 快照：AXTree + 截图 → Markdown 报告
   uws parse-warc <file> ...      离线 WARC 解析（python3 -m coordinator.cli parse-warc ...）
-  uws api [start|status|help]   WebTouch 浏览器执行服务（Agent Hub provider；旧 OpenAI 面迁移期兼容）
+  uws api [start|status|help]   浏览器执行服务（迁移期；对外契约是 CLI，见 session）
+  uws session create|use|show|list|close
+                                 本机 session 生命周期（stdout JSON；--session 复用句柄）
   uws qa --url <url> [选项]     前端交付验收工作台（多视口物理体检、洋红高亮 Diff 与交付验收单）
   uws commander --tree-file ...  混合指挥：AXTree → VLM 指挥官 → DSL 步骤（node: 引用）
   uws chat "问题" --img <图> ... 义眼评审（返回结构化判断）；-p/--prompt 是顶层别名

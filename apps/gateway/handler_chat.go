@@ -19,6 +19,9 @@ func (h *Handler) handleChat(w http.ResponseWriter, r *http.Request, forcedChann
 		writeChatError(w, err)
 		return
 	}
+	if !h.admitCLISession(w, req.SessionID) {
+		return
+	}
 	if req.Stream {
 		h.streamChat(w, r, req)
 		return
@@ -28,6 +31,7 @@ func (h *Handler) handleChat(w http.ResponseWriter, r *http.Request, forcedChann
 		writeChatError(w, err)
 		return
 	}
+	h.g.rememberCLISiteConversation(req.SessionID, out.SiteConversationID)
 	writeJSON(w, http.StatusOK, out)
 }
 
@@ -244,6 +248,9 @@ func (h *Handler) handleResponses(w http.ResponseWriter, r *http.Request, forced
 		writeChatError(w, err)
 		return
 	}
+	if !h.admitCLISession(w, respReq.SessionID) {
+		return
+	}
 	if respReq.Stream {
 		h.streamResponses(w, r, chatReq, respReq)
 		return
@@ -253,6 +260,7 @@ func (h *Handler) handleResponses(w http.ResponseWriter, r *http.Request, forced
 		writeChatError(w, err)
 		return
 	}
+	h.g.rememberCLISiteConversation(respReq.SessionID, out.SiteConversationID)
 	respObj := ConvertCompletionToResponseObject(out)
 	writeJSON(w, http.StatusOK, respObj)
 }

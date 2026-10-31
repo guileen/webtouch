@@ -162,6 +162,11 @@ webtouch — 浏览器自动化底座（Agent 自查手册；`uws` 为兼容别�
               # --url 截图稳定等待由「问题（提示词）」驱动：提示词写 等 2 秒 / wait 1.5s / settle 2
               #   即用显式时长；含详情/视频/播放/剧集等重内容信号自动 1.2s；否则 600ms（P1，未加 --settle-ms）
   uws config  set <key> <value>   /   uws config get <key>   (fallback_api_key 脱敏)
+  uws session create [--channel <id>] [--account <账号>] [--profile <id>]
+              use|show|close --session <id>    list [--all]
+              # 对外 session 生命周期。stdout 为 JSON（webtouch.cli.session.v1）。
+              # 状态在本机 ~/.uws/cli-sessions.json；CLI 只携带 session_id。
+              # 句柄也可用 WEBTOUCH_SESSION / UWS_SESSION。不新建指纹，凭据不进参数。
   uws vault   init [--force]   /   set <名> [--note <说明>] [--stdin]   /   get <名> [--fingerprint]
               list   /   rm <名>
               # 本地凭据库（age 加密，只落本机、不联网、不做对外服务）：账号密码/API Key 统一收口
@@ -186,14 +191,16 @@ webtouch — 浏览器自动化底座（Agent 自查手册；`uws` 为兼容别�
   引擎二进制默认取 uws 同目录 bin/uws-engine，其次 PATH，可 UWS_ENGINE_BIN 显式指定。
   启动参数默认 --browser cdp --log-path ~/.uws/engine-onlinelogs.db；需要时用 UWS_ENGINE_ARGS 追加/覆盖。
 
-浏览器 provider 执行与站点管理 REST（Agent Hub 才是客户端模型 API）
-  POST /internal/provider/chat       Hub 专用网页模型执行；body 含 channel_id / model / messages / session_id
-  POST /internal/provider/responses  Hub 专用 Responses 执行
-  GET  /internal/provider/models     Hub 查询网页模型能力
-  POST /v1/sessions                  新建 WebTouch 浏览器会话（由 Hub 执行链或本地管理调用）
+浏览器执行与站点管理（对外入口是 CLI；HTTP 仅迁移期）
+  webtouch session create|use|show|list|close
+  POST /internal/provider/chat       已废弃。迁移期仍可响应；UWS_PROVIDER_HTTP=410 时退役
+  POST /internal/provider/responses  已废弃
+  GET  /internal/provider/models     已废弃
+  POST /v1/sessions                  网关内部页签会话（不是对外契约）
   GET  /v1/sessions /v1/auth/status /v1/health
   会话锁定通道+模型；同网站账号复用既有 Profile/指纹绑定。
   WebTouch 的 /v1/models、/v1/chat*、/v1/responses 客户端模型入口已退役；客户端请连接 Agent Hub。
+  Hub 应本机 exec CLI，并用 JSON 的 hub.channel / hub.site_conversation_id 记账。
 
 引擎 gRPC（精确动作，契约=proto/uws_service.proto）
   InitializeContext（context_name=一个标签页，attach_cdp_url=附着已有 Chrome）

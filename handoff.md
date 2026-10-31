@@ -4,9 +4,11 @@
 > 目标与终局红线 → [`Goals.md`](Goals.md)；任务、依赖、验收 → [`Tasks.md`](Tasks.md)；项目唯一必读入口记忆与结论事实源 → [`GLOBAL.md`](GLOBAL.md)（§4 条目 #101–#129 是本线关键决策）。
 > 跨项目协调与全仓工作树风险 → [`labs/handoff.md`](../../handoff.md)；本文件之前的流水（含 2026-09-14 起各轮）→ [`labs/handoff-归档.md`](../../handoff-归档.md)。
 > QA Studio 线 2026-09-17 的快照另存 [`.mem/handoff.md`](.mem/handoff.md)（**遗留**，状态仍有效、只作考古）；更早的项目归档在 `.mem/handoff-归档.md`。
-> 本文件最后被写：2026-10-31 04:52；当前实现值与待验项见下方，历史过程见证据及归档。
+> 本文件最后被写：2026-10-31 07:48；当前实现值与待验项见下方，历史过程见证据及归档。
 
 ## 本线当前值（2026-10-31）
+
+- **对外 CLI + 本机 session lease（2026-10-31，`T-38` / `TDD-API-14`，DONE）**：对外能力面改为 `webtouch` / `uws session`（create / use / show / list / close，stdout `webtouch.cli.session.v1`）。状态在 `~/.uws/cli-sessions.json`：active → 空闲 10 分钟 idle（可恢复）→ 显式 close 或滑动 24h 关闭；死亡 `owner_pid` 可回收。同账号必须复用已绑定 Profile，`@vault:` 拒绝进 argv 与 lease。Hub 只记账 `hub.channel` 与 `hub.site_conversation_id`。`:8000 /internal/provider/*` 为迁移期：默认带废弃头仍响应；`UWS_PROVIDER_HTTP=410` 时 410 且不进引擎；已知 lease 关闭则 409。契约 [`docs/cli-session-contract-2026-10-31.md`](docs/cli-session-contract-2026-10-31.md)。**未做**：Hub 改 exec、CLI close 关页、流式回写站点对话 id。
 
 - **Gemini Web Veo 3.1 视频生成全链路闭环落地（2026-10-31，指令「gemini web first」与「生成测试视频」已闭环，DONE）**：
   按 `T-37` 完整交付并真机跑通：

@@ -40,8 +40,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodGet && path == "/v1/health":
 		h.handleHealth(w, r)
-	case r.Method == http.MethodGet && path == "/internal/provider/models":
-		h.handleModels(w, r)
+	case path == "/internal/provider/models" || path == "/internal/provider/chat" || path == "/internal/provider/responses":
+		// 迁移期内部入口。对外契约是 CLI，见 docs/cli-session-contract-2026-10-31.md。
+		if !h.allowDeprecatedProviderHTTP(w, r) {
+			return
+		}
+		switch {
+		case r.Method == http.MethodGet && path == "/internal/provider/models":
+			h.handleModels(w, r)
+		case r.Method == http.MethodPost && path == "/internal/provider/chat":
+			h.handleChat(w, r, "")
+		case r.Method == http.MethodPost && path == "/internal/provider/responses":
+			h.handleResponses(w, r, "")
+		default:
+			writeError(w, http.StatusMethodNotAllowed, "method not allowed", "invalid_request_error", "")
+		}
 	case r.Method == http.MethodGet && path == "/v1/diag/model-menu":
 		h.handleDiagModelMenu(w, r)
 	case r.Method == http.MethodGet && path == "/v1/diag/recipe":
@@ -64,11 +77,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.handlePurgeDrain(w, r)
 	case strings.HasPrefix(path, "/v1/purge/"):
 		h.handlePurgeItem(w, r, strings.TrimPrefix(path, "/v1/purge/"))
-	case r.Method == http.MethodPost && path == "/internal/provider/chat":
-		// Agent Hub's private browser-provider contract. Client-facing model APIs belong to Agent Hub.
-		h.handleChat(w, r, "")
-	case r.Method == http.MethodPost && path == "/internal/provider/responses":
-		h.handleResponses(w, r, "")
 	case retiredModelAPIPath(path):
 		writeError(w, http.StatusGone, "客户端模型 API 已迁移到 Agent Hub，请改用 Agent Hub 的 /v1/models、/v1/text、/v1/chat/completions 或 /v1/responses", "gateway_moved", "")
 	default:
