@@ -52,4 +52,4 @@ WebTouch 体系按业务边界划分为五大高内聚领域。每个领域包�
 
 ## 三、 历史案卷库
 
-单次实跑、探针与历史草案不属于活规范。`docs/evidence/`、`archive/`、`benchmarks/` 不在本仓库树内，本图不链接这些路径，也不在这里补造目录。
+单次实跑、探针与历史草案不属于活规范。本仓证据见 [开源合格化案卷](evidence/pilots/oss-qualification-2026-10-31.md)；`archive/`、`benchmarks/` 不在本仓库树内。

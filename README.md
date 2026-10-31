@@ -85,7 +85,7 @@ CLI session lease（~/.uws/cli-sessions.json）
 | [算法内核](spec/algorithm-kernel.md) | 现役执行与验收口径 |
 | [v2 架构 RFC](docs/webtouch-v2-architecture-rfc.md) | 目标态；未落地前不以它替换现役内核 |
 
-`pipeline/`、`learning/`、`benchmarks/`、`archive/`、`docs/evidence/` 不在本仓库树内。
+`pipeline/`、`learning/`、`benchmarks/`、`archive/` 不在本仓库树内。
 
 ## 状态
 
