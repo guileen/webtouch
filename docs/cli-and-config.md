@@ -41,6 +41,18 @@ uws daemon stop       # 停止
 > 通过 pid 直接控制。VLM 兜底默认开启（`--vlm-fallback` 默认 `true`），Key 自动读
 > `UWS_VLM_API_KEY || DEEPSEEK_API_KEY`。
 
+### 1.2 对外 session（CLI lease）
+
+对外能力走 CLI，不走常驻 HTTP。session 生命周期在本机 lease，命令只携带句柄：
+
+```bash
+webtouch session create --channel gemini-web
+webtouch session use --session wts_...          # 或 export WEBTOUCH_SESSION=wts_...
+webtouch session close --session wts_...
+```
+
+`uws` 与 `webtouch` 等价。stdout 是 JSON（`webtouch.cli.session.v1`）。Hub 只记账其中的 `hub.channel` 与 `hub.site_conversation_id`。同一账号必须已经 `identity bind`，本命令不新建指纹。契约见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。
+
 ---
 
 ## 2. 全局配置 (Zero-config 理念)

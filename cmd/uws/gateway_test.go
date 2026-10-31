@@ -81,7 +81,10 @@ func TestRunGatewayHelp(t *testing.T) {
 	_, _ = io.Copy(&buf, r)
 	output := buf.String()
 
-	if !strings.Contains(output, "个人 AI 互动总线网关") {
-		t.Errorf("output 应包含总线网关说明: %s", output)
+	if !strings.Contains(output, "浏览器 provider 执行服务") {
+		t.Errorf("output 应包含浏览器执行服务说明: %s", output)
+	}
+	if !strings.Contains(output, "webtouch session") || !strings.Contains(output, "/internal/provider/chat") {
+		t.Errorf("output 应说明 CLI 是对外契约且点名已废弃的 provider 路径: %s", output)
 	}
 }

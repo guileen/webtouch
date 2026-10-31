@@ -1,7 +1,8 @@
 # Agent Hub 模型网关与 WebTouch 浏览器边界
 
-> 状态：`ACTIVE`（2026-10-03 用户定案；迁移进行中）
+> 状态：`ACTIVE`（2026-10-03 用户定案；2026-10-31 对外入口改为 CLI）
 > 本文是 Agent Hub 与 WebTouch 之间模型入口、连续体、网站身份及浏览器执行边界的唯一事实源。
+> WebTouch 对外能力面的 session 状态机见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。
 
 ## 职责归属
 
@@ -24,24 +25,28 @@ flowchart LR
     C["IDE / Agent / CLI / Web"] --> H["Agent Hub 现有 HTTP 服务<br/>Web 控制台 + /api/turns + /v1 模型 API"]
     H --> R{"provider 路由"}
     R --> D["官方模型 API"]
-    R --> WAPI["WebTouch 浏览器执行契约"]
-    WAPI --> WT["WebTouch<br/>账号 / Vault / Profile / 站点适配"]
-    WT --> B["Chrome / CDP / 网页模型"]
-    B --> WT --> WAPI --> H --> C
-    V["WebTouch Vault"] -."凭据引用 / 受控解析".-> H
-    H -."连续体账本：channel 与站点会话引用".-> WT
+    R --> CLI["本机 exec CLI<br/>webtouch / uws session"]
+    CLI --> WT["WebTouch lease + 执行<br/>账号 / Vault / Profile / 站点适配"]
+    WT --> B["Chrome / CDP / engine gRPC"]
+    B --> WT --> CLI --> H --> C
+    V["WebTouch Vault"] -."uws vault get 管道".-> H
+    H -."账本只留 channel 与 site_conversation_id".-> CLI
 ```
 
-Agent Hub 对客户端提供模型协议与托管连续体入口；Hub 到 WebTouch 使用浏览器执行契约。该契约可以承载模型轮次数据，但不得承担全局 provider 目录、官方 API 路由或客户端入口职责。WebTouch 的站点级节流、账号熔断及“已派发但结果未知”判据必须在 WebTouch 执行边界生效。账号与 Profile/指纹绑定由 WebTouch 保存并解析；Hub 连续体只保存稳定 channel 和站点会话引用，不接触账号标识，也不因新建 Hub 对话而创建新指纹。
+Agent Hub 对客户端提供模型协议与托管连续体入口。Hub 到 WebTouch 的目标调用是本机 exec CLI，而不是把 `:8000 /internal/provider/*` 当对外契约。CLI 携带 `session_id`；WebTouch 本机 lease 持有浏览器 session。CLI stdout 的 `hub.channel` 与 `hub.site_conversation_id` 是 Hub 可以落账的字段。`session_id` 只在一次 exec 链里回传，账号引用和 Profile 不进入 Hub 账本。
+
+`:8000 /internal/provider/*` 处于迁移期：默认仍响应并带废弃头，`UWS_PROVIDER_HTTP=410` 时返回 410 且不触达引擎。Hub 改为 exec 之前，这条 HTTP 只是兼容窗口。引擎 gRPC 仍是内部 IPC。
+
+该执行边界可以承载模型轮次数据，但不得承担全局 provider 目录、官方 API 路由或客户端入口职责。WebTouch 的站点级节流、账号熔断及“已派发但结果未知”判据必须在 WebTouch 执行边界生效。账号与 Profile/指纹绑定由 WebTouch 保存并解析；Hub 连续体只保存稳定 channel 和站点会话引用，不接触账号标识，也不因新建 Hub 对话而创建新指纹。
 
 模型网关直接挂载在 Agent Hub 当前 HTTP 服务中，与 Web 控制台、`/api/turns` 共用服务进程和生命周期；不新增独立网关服务或端口。
 
 ## 迁移约束
 
 1. Agent Hub 提供客户端入口与模型目录；WebTouch 旧通用模型路径返回 `410 gateway_moved`，客户端调用方统一迁至 Hub。
-2. WebTouch 旧路径改为 Hub 专用的浏览器 provider 执行接口；账号、Vault、Profile/指纹绑定、浏览器生命周期和站点安全逻辑留在 WebTouch。
+2. WebTouch 对外入口是 CLI。浏览器 session、账号、Vault、Profile/指纹绑定和站点安全逻辑留在 WebTouch 本机。`:8000 /internal/provider/*` 只在 Hub 完成 exec 迁移前保留，并标记废弃。
 3. Hub 的 Web Continuum 通过稳定 `session_key` 持久化跨请求对话历史及站点会话 ID；已有 Web 控制台需接入该账本并能恢复对话。长期记忆可由 Cog 提供，但不替代轮次历史。WebTouch 只持有浏览器执行所需的本地会话、账号和 Profile 绑定，不复制 Hub 对话历史。
-4. 所有消费者迁至 Agent Hub 后，停用 WebTouch 通用模型 API 门面和对外 OpenAI 兼容职责。WebTouch 的浏览器 provider 接口继续由 Hub 内部调用。
+4. 所有消费者迁至 Agent Hub 后，停用 WebTouch 通用模型 API 门面和对外 OpenAI 兼容职责。Hub 调用 WebTouch 改为本机 exec CLI。迁移完成前 `/internal/provider/*` 仍可响应，但不是对外契约；完成后默认改为 410。
 5. Hub 模型目录中的 `provider/model` 在发往 provider 前拆为路由和真实模型名；显式 `provider` 与模型前缀冲突时返回 400。流式事件、站点会话引用及 provider 的错误体和 `Retry-After` 原样透传。文本兼容入口保留原请求/响应字段，排队和解析仅在 Hub 实现；WebTouch 不保留旧文本门面及其专属闸门。
 6. `models.json` 的 provider 可配置 `credential_ref: "@vault:<条目名>"`。Hub 通过本地 WebTouch CLI `uws vault get <条目名>` 解引用，`AHUB_WEBTOUCH_BIN` 可指定该 CLI；明文仅在子进程管道及 Hub 请求内存存在，不进入 argv、日志、响应或新凭据文件。配置引用时读取失败须拒绝请求，不回退其他密钥；未配置引用的现有环境变量/OAuth 解析保留兼容。Vault 文件的存储、加密和管理仍由 WebTouch 所有。
 7. Web 控制台为每个浏览器工作区生成随机 `web:console:<UUID>` 会话键，保存在本地浏览器存储；发送走 `POST /api/turns`，恢复走 `GET /api/turns?session_key=...`（返回 `session_key/messages/summary/updated_at`）。新对话仅切换新键，不删除旧账本或站点对话。Web 对话不自动执行工具；保留 Cog 长期记忆检索和状态入口，其自动沉淀仍属 Cog 能力，不以 Hub 轮次账本冒充长期记忆。Cog 不可用不阻断 Hub 对话。

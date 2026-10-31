@@ -4,7 +4,9 @@
 > §2.2/§5-R1），统一 AI 网关属**应用层**，当前混在核心仓（`apps/gateway`、`cmd/uws-gateway`、
 > `coordinator/app/api_server.py`、`coordinator/app/providers/`）；Python 服务已归档，OpenAI 兼容门面现由 Agent Hub 提供。
 
-> **职责迁移（2026-10-03 用户定案）**：Agent Hub 是面向客户端的统一模型 API 与模型目录所有者。WebTouch 仅运行浏览器 provider 执行服务，并继续管理网站、账号、Vault、账号到 Profile/指纹绑定、站点会话和风控状态。WebTouch 的 `/v1/models`、`/v1/text`、`/v1/chat*`、`/v1/responses` 客户端模型门面已退役；调用返回 `410 gateway_moved` 并指向 Agent Hub。Hub 只通过 `/internal/provider/*` 调用 WebTouch。本文后续关于 OpenAI 请求/响应形状、模型目录、流式和错误语义，约束 Hub 到 WebTouch 的内部执行契约，不构成 WebTouch 客户端模型 API。唯一跨项目边界见 [`Agent Hub 模型网关与 WebTouch 浏览器边界`](2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。
+> **职责迁移（2026-10-03 用户定案）**：Agent Hub 是面向客户端的统一模型 API 与模型目录所有者。WebTouch 仅运行浏览器 provider 执行服务，并继续管理网站、账号、Vault、账号到 Profile/指纹绑定、站点会话和风控状态。WebTouch 的 `/v1/models`、`/v1/text`、`/v1/chat*`、`/v1/responses` 客户端模型门面已退役；调用返回 `410 gateway_moved` 并指向 Agent Hub。
+>
+> **对外入口（2026-10-31）**：WebTouch 对外能力面改为 CLI（`webtouch` / `uws`）。session 生命周期由本机 lease 持有，见 [`cli-session-contract-2026-10-31.md`](cli-session-contract-2026-10-31.md)。`:8000` 的 `/internal/provider/*` 只是迁移期内部入口（响应带废弃头；`UWS_PROVIDER_HTTP=410` 时直接退役且不触达引擎），不再是对外契约。引擎 gRPC 仍是内部 IPC。唯一跨项目边界见 [`Agent Hub 模型网关与 WebTouch 浏览器边界`](2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。本文后续关于 OpenAI 请求/响应形状、模型目录、流式和错误语义，描述的是迁移期内部执行形状，不构成 WebTouch 对外 API。
 >
 > 浏览器 provider 执行契约：Agent Hub 负责客户端协议与 provider 路由；WebTouch 将 Hub 指令转换为网页动作并返回结果。WebTouch 不提供通用模型 API。
 > 状态：浏览器执行与站点管理仍由 `cmd/uws-gateway` + `apps/gateway` 提供；客户端模型 API 由 Agent Hub 提供。
@@ -18,17 +20,18 @@ WebTouch 浏览器 provider 执行服务仅承接 Hub 已选定的网页模型�
 
 ## 2. 进程与端口
 
-- `uws-gateway` 默认监听 `127.0.0.1:8000`（与现有 api_server 对齐）；
-- web 通道依赖 `uws-engine` gRPC `127.0.0.1:50051`；
+- 对外入口是 CLI，不是本进程的端口。`uws-gateway` 若仍监听 `127.0.0.1:8000`，只为迁移期；新调用走 `webtouch session`。
+- web 通道依赖 `uws-engine` gRPC `127.0.0.1:50051`（内部 IPC，保留）；
 - 配置：`channels.json`（v1 用 JSON，零第三方依赖；YAML 后置）。
+- CLI session lease 默认 `~/.uws/cli-sessions.json`（`UWS_CLI_SESSION_FILE` 覆盖）。
 
 ## 3. 端点
 
 | 方法 / 路径 | 说明 |
 |---|---|
-| `GET /internal/provider/models` | Agent Hub 查询网页模型与能力列表 |
-| `POST /internal/provider/chat` | Agent Hub 发起网页模型轮次（内部沿用 Chat Completions 请求/响应形状） |
-| `POST /internal/provider/responses` | Agent Hub 发起网页模型 Responses 轮次 |
+| `GET /internal/provider/models` | **迁移期 / 已废弃**。响应带 `Deprecation` 与 `X-WebTouch-Successor: cli`。替代：Hub exec CLI。`UWS_PROVIDER_HTTP=410` 时返回 410 `provider_http_retired` |
+| `POST /internal/provider/chat` | **迁移期 / 已废弃**。同上。已知 CLI `session_id` 会复用 lease；已关闭 lease 返回 409 `session_lease_closed` 且不进引擎 |
+| `POST /internal/provider/responses` | **迁移期 / 已废弃**。同上 |
 | `POST /v1/sessions` | 新建会话（web 通道 = 新 Tab；body 支持 `channel_id` 或 `model` 解析通道；带 `site_conversation_id` 时直接落到该站点会话页，见 §9） |
 | `GET /v1/sessions` | **本网关**会话列表（含通道 / 锁定模型）；站点侧对话见下一行 |
 | `GET /v1/sessions/{id}/conversations` | **站点**侧栏对话列表（`id` ＋ 标题；只读，见 §9「站点会话身份」） |

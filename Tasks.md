@@ -16,6 +16,13 @@
 
 ## 任务
 
+### `T-38` CLI 对外契约与本机 session lease（2026-10-31）
+
+- **范围**：对外能力面改为 `webtouch` / `uws` CLI。`session create|use|show|list|close` 读写本机 lease；Hub 只记账 `hub.channel` 与 `hub.site_conversation_id`。`:8000 /internal/provider/*` 标为迁移期（废弃头；`UWS_PROVIDER_HTTP=410` 时 410 且不进引擎）。不新建指纹，凭据不进 argv / lease。
+- **不做**：不改 Agent Hub 进程；不在 `close` 里杀 Chrome；不删算法资产。
+- **验收**：`go test ./pkg/clisession ./cmd/uws ./apps/gateway -count=1`。契约 [`docs/cli-session-contract-2026-10-31.md`](docs/cli-session-contract-2026-10-31.md)。
+- **状态**：`DONE`（本切片）。Follow-up：Hub 改为 exec CLI；CLI close 再接 engine `CloseContext`；流式回写 `site_conversation_id`；迁移窗口结束后 provider HTTP 默认 410。
+
 ### `T-1` 补一组 VLM 原始比例证据（前置：用户 GO「先补证据」）
 
 - **范围**：只加日志、不改行为——在 **plan 路径**的 VLM 兜底打印当轮 **VLM 原始 `x_ratio/y_ratio` + `curW/curH/origin` + 落点元素**（`pkg/engine/vlm_fallback.go`；plan 路径当前不打印原始响应，`uws run` 也没有 `--debug`）。
