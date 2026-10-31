@@ -6,7 +6,7 @@
 
 ## 一、 项目本质与四大终局目标 (JTBD)
 
-**WebTouch 是浏览器执行与站点身份底座：管理网站目录、网站账号与 Vault，维持账号和 Profile/指纹的稳定绑定，并为 Agent Hub 执行网页交互。它同时提供桌面自动化与 Vibe Coding 交付验收能力。客户端模型 API 与 CLI/Web 连续体归 Agent Hub，职责边界见[跨项目唯一规范](../agent-hub/docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。**
+**WebTouch 是浏览器执行与站点身份底座：管理网站目录、网站账号与 Vault，维持账号和 Profile/指纹的稳定绑定，并为 Agent Hub 执行网页交互。它同时提供桌面自动化与 Vibe Coding 交付验收能力。客户端模型 API 与 CLI/Web 连续体归 Agent Hub，职责边界见[跨项目唯一规范](docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。**
 
 用户雇佣 WebTouch 解决四大刚性终局诉求：
 

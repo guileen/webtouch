@@ -10,7 +10,7 @@
 ## 1. 核心定位与设计原则
 
 - **工业级隐蔽执行底座**：原生 Chrome CDP 接管，偏好注入封死 WebRTC，原型链 Native Hook，确定性渲染底噪，macOS 伴生悬浮壳（`NonActivatingPanel` 绝不抢占前台焦点）。
-- **浏览器模型 provider 与执行层**：为 Agent Hub 提供站点账号、Vault、账号/Profile/指纹绑定、网页会话与站点交互能力；Agent Hub 是客户端模型 API 和 CLI/Web 连续体唯一 owner。跨项目职责唯一规范见 [Agent Hub 模型网关与 WebTouch 边界](../agent-hub/docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。
+- **浏览器模型 provider 与执行层**：为 Agent Hub 提供站点账号、Vault、账号/Profile/指纹绑定、网页会话与站点交互能力；Agent Hub 是客户端模型 API 和 CLI/Web 连续体唯一 owner。跨项目职责唯一规范见 [Agent Hub 模型网关与 WebTouch 边界](docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。
 - **确定性执行与实战蒸馏**：两段式极简 AXTree + node_id 确定性执行，自愈规则沉淀；ONNX/WASM 资产冷态待命（PARKED），Trace 现场蒸馏。
 
 ## 2. 活规范地图与读取
@@ -32,7 +32,7 @@
 > 旧引用交叉表：旧版 §3 五域矩阵 → [`docs/README.md`](docs/README.md)；旧版 §5 的 #1~#100 → `archive/GLOBAL-归档.md`，#101~#127 → 本节；旧版 §7 自动优化指令仅作历史记录，当前任务与执行门禁以 `AGENTS.md` / `Tasks.md` 为准。
 
 - **#101 终局架构与债务清算**：废除 Tauri 壳收敛于原生 Viewer；CC 爬取归档转向实战 Trace（[`WebTouchKeyDesign.md`](WebTouchKeyDesign.md)）。
-- **#102 浏览器 provider 拓扑**：Chrome/CDP + Engine + WebTouch 浏览器执行服务承载站点账号/Profile/指纹绑定、Vault、登录态和网页交互；客户端模型 API 与 CLI/Web 连续体归 Agent Hub。WebTouch 通用 OpenAI 模型门面已退役，内部执行契约仅供 Hub 调用（[`../agent-hub/docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md`](../agent-hub/docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)）。
+- **#102 浏览器 provider 拓扑**：Chrome/CDP + Engine + WebTouch 浏览器执行服务承载站点账号/Profile/指纹绑定、Vault、登录态和网页交互；客户端模型 API 与 CLI/Web 连续体归 Agent Hub。WebTouch 通用 OpenAI 模型门面已退役，内部执行契约仅供 Hub 调用（[`docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md`](docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)）。
 - **#103 算法资产保全与定位**：Proper WASM/SimHash/ONNX 暂停装配绝不放弃；融合 WSTN 拓扑转移网（[`docs/algorithm-assets-inventory-2026-09-23.md`](docs/algorithm-assets-inventory-2026-09-23.md)）。
 - **#104 M1 销账与 Go 网关收敛**：彻底切除 Python api_server，运行时全面由 Go 二进制托管（`cmd/uws-gateway`）。
 - **#105 WSTN Tier 0 路由与因果录制**：冻结 `wstn.route.v1` 契约，页面状态 ROC 校准（[`docs/wstn-algorithm-task-spec.md`](docs/wstn-algorithm-task-spec.md)）。

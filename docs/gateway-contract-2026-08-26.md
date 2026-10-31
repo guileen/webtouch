@@ -4,7 +4,7 @@
 > §2.2/§5-R1），统一 AI 网关属**应用层**，当前混在核心仓（`apps/gateway`、`cmd/uws-gateway`、
 > `coordinator/app/api_server.py`、`coordinator/app/providers/`）；Python 服务已归档，OpenAI 兼容门面现由 Agent Hub 提供。
 
-> **职责迁移（2026-10-03 用户定案）**：Agent Hub 是面向客户端的统一模型 API 与模型目录所有者。WebTouch 仅运行浏览器 provider 执行服务，并继续管理网站、账号、Vault、账号到 Profile/指纹绑定、站点会话和风控状态。WebTouch 的 `/v1/models`、`/v1/text`、`/v1/chat*`、`/v1/responses` 客户端模型门面已退役；调用返回 `410 gateway_moved` 并指向 Agent Hub。Hub 只通过 `/internal/provider/*` 调用 WebTouch。本文后续关于 OpenAI 请求/响应形状、模型目录、流式和错误语义，约束 Hub 到 WebTouch 的内部执行契约，不构成 WebTouch 客户端模型 API。唯一跨项目边界见 [`Agent Hub 模型网关与 WebTouch 浏览器边界`](../../agent-hub/docs/2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。
+> **职责迁移（2026-10-03 用户定案）**：Agent Hub 是面向客户端的统一模型 API 与模型目录所有者。WebTouch 仅运行浏览器 provider 执行服务，并继续管理网站、账号、Vault、账号到 Profile/指纹绑定、站点会话和风控状态。WebTouch 的 `/v1/models`、`/v1/text`、`/v1/chat*`、`/v1/responses` 客户端模型门面已退役；调用返回 `410 gateway_moved` 并指向 Agent Hub。Hub 只通过 `/internal/provider/*` 调用 WebTouch。本文后续关于 OpenAI 请求/响应形状、模型目录、流式和错误语义，约束 Hub 到 WebTouch 的内部执行契约，不构成 WebTouch 客户端模型 API。唯一跨项目边界见 [`Agent Hub 模型网关与 WebTouch 浏览器边界`](2026-10-03-agenthub-model-gateway-webtouch-boundary.md)。
 >
 > 浏览器 provider 执行契约：Agent Hub 负责客户端协议与 provider 路由；WebTouch 将 Hub 指令转换为网页动作并返回结果。WebTouch 不提供通用模型 API。
 > 状态：浏览器执行与站点管理仍由 `cmd/uws-gateway` + `apps/gateway` 提供；客户端模型 API 由 Agent Hub 提供。
