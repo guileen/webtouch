@@ -588,6 +588,8 @@
 
 ## 8. CLI 与开发者体验
 
+- [x] **TDD-CLI-FETCH-01**：匿名 fetch 固定参数、JSON 回执、退出失败、超时、无效输出与截图写入；拒绝 session 和 vault。测试 `cmd/uws/fetch_test.go`。完整包测试需可用 Go 依赖。
+
 *对应 `docs/cli-and-config.md` 与 `docs/user-cases.md`*
 
 - [x] **TDD-CLI-01**（P0/M6A/E2E）：`uws run --attach`：接管本地 Chrome 新建标签页完成目标任务并输出 `result.md`，不破坏原标签页与登录态。（2026-08-20 点亮：`coordinator/cli.py` 提供 `run` 子命令，加载声明式任务 `my_task.json` 驱动 `Executor` 逐步执行并输出结构化 `result.md`，`tests/e2e/test_cli_run.py` 端到端闭环验证退出码 0）

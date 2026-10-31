@@ -33,6 +33,8 @@ make build
 
 成功和失败都写 stdout JSON，契约名 `webtouch.cli.session.v1`。状态文件仍在 `~/.uws/cli-sessions.json`。字段与状态机见 [CLI session 契约](docs/cli-session-contract-2026-10-31.md)。
 
+匿名公开页面可用 `./webtouch fetch --url https://example.com`；用法与依赖见 [fetch 契约](docs/cli-fetch-contract-2026-10-31.md)。
+
 引擎按需由 CLI 拉起：
 
 ```bash

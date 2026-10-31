@@ -32,6 +32,8 @@ func main() {
 		os.Exit(0)
 	}
 	switch args[0] {
+	case "fetch":
+		os.Exit(runFetch(args[1:], os.Stdout))
 	case "config":
 		if err := runConfig(args[1:]); err != nil {
 			fmt.Fprintln(os.Stderr, prog+": "+err.Error())
