@@ -18,7 +18,9 @@
 
 ### `T-OSS` 开源合格化（2026-10-31）
 
-- **状态**：IN_PROGRESS；A：MIT 与安全政策已合入 PR #5；B：PR #6 已合入，PR 与 main 双平台 CI 通过；C：证据草案已启动，完整冷环境及授权等核验待补。完成须以实际 PR、CI 和验证证据为准。
+- **状态**：IN_PROGRESS；A、B 已合入，候选 main 双平台 CI 已绿；C 的凭据/路径扫描、私密报告配置和资产盘点见 [案卷](docs/evidence/pilots/oss-qualification-2026-10-31.md)。
+- [x] MIT/安全政策、候选双平台 CI、凭据和路径复核、私密报告配置、旧文档表述检查。
+- [ ] 第三方来源和许可证义务闭环（含 ONNX 模型训练数据）；隔离状态变量下冷克隆 `make ci` 两项 Go 测试失败（案卷 BLOCKED），修复并复验；最终 main SHA 对应 CI。所有关键项完成前不宣称源码开源合格。
 - **边界**：不改 module 或状态路径，不发 tag/Release；PR #4 独立处理。
 
 ### `T-39` 对外名称从 uws 逐步退役到 webtouch（2026-10-31）

@@ -1,6 +1,6 @@
 # WebTouch · 项目交接（webtouch 状态域）
 
-- **开源合格化（2026-10-31 04:30 PDT）**：PR #5、#6 已合；#6 PR 与 main `dfdb914` 的 Linux/macOS CI 通过。PR-C 证据草案见 `docs/evidence/pilots/oss-qualification-2026-10-31.md`；冷环境细目、授权与凭据审查待完成，T-OSS 保持 IN_PROGRESS。
+- **开源合格化（2026-10-31 04:33 PDT）**：PR #5、#6 已合，候选 main `dfdb914` 双平台 CI 通过。PR #7 证据及余项见 `docs/evidence/pilots/oss-qualification-2026-10-31.md`；第三方来源授权未闭环；隔离状态变量的冷克隆两项 Go 测试失败，最终 main CI 待验，T-OSS 为 IN_PROGRESS。
 
 > **定位（2026-09-23 04:21 起为后续标准）**：本文件是 WebTouch 的**状态域（AOF）**——当前值 + 指针 + 本线不可推断的硬约束，目标 ≤150 行；接力写在这里，不再写进 `labs/handoff.md`。
 > 目标与终局红线 → [`Goals.md`](Goals.md)；任务、依赖、验收 → [`Tasks.md`](Tasks.md)；项目唯一必读入口记忆与结论事实源 → [`GLOBAL.md`](GLOBAL.md)（§4 条目 #101–#129 是本线关键决策）。
@@ -10,7 +10,7 @@
 
 ## 本线当前值（2026-10-31）
 
-- **开源合格化 `T-OSS`（2026-10-31 04:08 PDT）**：A 许可与安全政策已合入 PR #5；B CI 待合，分层审计与缺失模块导致 Python 收集失败；C 待 A/B 合入后补干净环境证据。具体状态见 `Tasks.md`，未完成前不宣称开源合格。
+- **开源合格化 `T-OSS`**：见顶部当前值与案卷；未完成前不宣称开源合格。
 
 - **名称退役 `T-39`（2026-10-31 09:02）**：对外命令与用户文档主名是 `webtouch`；`uws` 为同一二进制弃用别名（stderr 提示）。正式二进制 `webtouch-engine` / `webtouch-gateway` / `webtouch-lease`，旧名是软链。Go module 仍是 `uws`。状态目录仍是 `~/.uws` 与 `~/.uws-chrome-debug`，不自动迁移。决策 GLOBAL #133，契约 `docs/cli-session-contract-2026-10-31.md` §8。
 - **公开仓本机路径去标识（2026-10-31 08:13，已接到 `T-38` 之后）**：仓内 `/Users/<user>` 绝对路径与用户名目录已改为 `$HOME`、`<HOME>`、`<project-root>` / `<labs-root>`；脚本用 `os.path.expanduser('~')` / `UWS_EPISODES_DIR`、`__file__` 上溯仓库根（`WEBTOUCH_ROOT` 可覆盖）；指纹审计测试从 cwd 上溯 `go.mod`。profile 守卫仍拒绝宿主 `/Users/*`，自检夹具账号为 `example`。
