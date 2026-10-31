@@ -22,6 +22,8 @@ export PATH="$PWD/.tools/bin:$PATH"
 make ci
 ```
 
+测试必须隔离影响断言的状态目录环境变量；验证 `UWS_ENGINE_DIR` 时应清除优先级更高的 `WEBTOUCH_STATE_DIR`，并单独测试其优先级。
+
 `make ci` 执行 gofmt 检查、分层与消费方审计、Proto 生成物一致性、全部 Go 包及 Python 基础测试、构建与版本自检。未检出兄弟仓时消费方审计会跳过，不代表跨仓已验。CI 不调用 `make install` 或生产 daemon；真实浏览器、WASM、ONNX 和桌面运行时需另行验证。Python 基础测试收集本仓 unit / integration / security；明确依赖缺失的 pipeline、learning 或 benchmarks 的历史测试文件列在 pytest 配置的 ignore 清单中，不计入本仓验证。其他收集或测试错误均导致失败。
 
 ---
