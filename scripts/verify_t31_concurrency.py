@@ -7,13 +7,14 @@
 收尾只清本进程创建的两条站点对话（契约 §14 只删工具记录过的 ID）。
 判定：顺序 PASS 而并发 FAIL ⇒ 判据 4 后半不成立（见 Tasks.md `T-35`）。
 """
-import json, threading, time, urllib.error, urllib.request
+import json, os, threading, time, urllib.error, urllib.request
 from pathlib import Path
 
 GW = "http://127.0.0.1:8000"; CHAN = "gemini-web"
 PROMPT = "只回答两个字：收到"; GAP = 6.0
 STAMP = time.strftime("%Y%m%d-%H%M%S")
-ROOT = Path("/Users/gl/hz/aliyun-terraform/labs/world-agent/webtouch")
+# 仓库根＝本脚本上两级（scripts/ → repo）。WEBTOUCH_ROOT 可覆盖。
+ROOT = Path(os.environ["WEBTOUCH_ROOT"]).expanduser().resolve() if os.environ.get("WEBTOUCH_ROOT") else Path(__file__).resolve().parents[1]
 LOGF = ROOT / "docs" / "evidence" / "pilots" / f"t31-concurrency-{STAMP}.log"
 LINES, RES, SIDS = [], {"pass": [], "fail": []}, []
 

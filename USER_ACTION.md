@@ -85,7 +85,7 @@
   本地 HTTP `/v1/search`，详见 GLOBAL §5 裁决 #28）。**仍待**：真实 CC→LLM
   语料喂入蒸馏（本条目后半）——把 parse-warc 产出的 Markdown 接入
   `pipeline/llm_distiller` 替换种子数据，是下一高价值步骤（依赖 LLM 通道，
-  可用 `gl/cloud-ai-gateway` 或注入式 llm_call 先跑小样验证）。
+  可用 `cloud-ai-gateway` 或注入式 llm_call 先跑小样验证）。
   **状态更新（2026-08-20 续31，真实语料获取入口已落地）**：`uws cc-fetch`
   （`coordinator/cc_fetch.py`：collinfo.json / wet.paths.gz / 限量并发断点续传
   下载 WET，TDD-CLI-10/11 点亮，见 GLOBAL §5 裁决 #29）；WARCReader 流式化

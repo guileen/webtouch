@@ -127,16 +127,18 @@ selftest() {
   chk 1 "拒绝空值"                 assert_self_built_port ""
   chk 1 "拒绝非数字"               assert_self_built_port 92x4
   echo "== profile 守卫 =="
+  # 夹具账号 example 只为命中 /Users/* 拒绝分支，不指向真实本机用户。
+  local host_profile="/Users/example/.uws-chrome-debug"
   chk 0 "接受 /private/tmp/wtx-chrome-9224" assert_self_built_profile /private/tmp/wtx-chrome-9224
-  chk 1 "拒绝宿主 ~/.uws-chrome-debug"      assert_self_built_profile /Users/gl/.uws-chrome-debug
-  chk 1 "拒绝任意 /Users/**"                assert_self_built_profile /Users/gl/Library/Chrome
+  chk 1 "拒绝宿主 ~/.uws-chrome-debug"      assert_self_built_profile "$host_profile"
+  chk 1 "拒绝任意 /Users/**"                assert_self_built_profile "/Users/example/Library/Chrome"
   chk 1 "拒绝 /"                            assert_self_built_profile /
   chk 1 "拒绝空值"                          assert_self_built_profile ""
   echo "== 孤儿匹配谓词 =="
   chk 0 "命中自建 9224 Chrome" \
     cmdline_is_self_built "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --headless=new --remote-debugging-port=9224 --user-data-dir=/private/tmp/wtx-chrome-9224 about:blank" /private/tmp/wtx-chrome-9224
   chk 1 "不命中宿主 9222 Chrome" \
-    cmdline_is_self_built "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=/Users/gl/.uws-chrome-debug --remote-debugging-port=9222" /private/tmp/wtx-chrome-9224
+    cmdline_is_self_built "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=${host_profile} --remote-debugging-port=9222" /private/tmp/wtx-chrome-9224
   chk 1 "不命中同名非 Chrome 进程" \
     cmdline_is_self_built "python3 watch.py --user-data-dir=/private/tmp/wtx-chrome-9224" /private/tmp/wtx-chrome-9224
   chk 1 "不命中空命令行" cmdline_is_self_built "" /private/tmp/wtx-chrome-9224

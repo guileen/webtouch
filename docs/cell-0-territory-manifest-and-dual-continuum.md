@@ -3,7 +3,7 @@
 
 > **版本**：v1.0 (2026-10-03 定案)  
 > **地位**：端点星（WebTouch 自治城邦）的最高主权宪章与双连续体运行规范。  
-> **统合上级**：[`seldon_plan_dual_continuum.md`](file:///Users/gl/.gemini/antigravity/brain/52aa243f-e988-438b-84c7-a4557cc7d8c7/seldon_plan_dual_continuum.md)（《谢顿计划》）  
+> **统合上级**：《谢顿计划》`seldon_plan_dual_continuum.md`（本机会话笔记，不入库；路径形如 `<HOME>/.gemini/antigravity/brain/<session>/seldon_plan_dual_continuum.md`）  
 > **状态**：`ACTIVE`（生产运行基线）
 
 ---
@@ -72,7 +72,7 @@
 遇下列事务，幼主不得凭空推测，必须派 Codex 探马或走正式外交契约：
 1. **CC-Connect 连续体网关中继**：位于 `world-agent/cc-connect`，属外部盟友，交互走 HTTP / Gateway 协议。
 2. **Agent Hub 全局调度总线**：位于 `world-agent/agent-hub`，任务分发通过 `taskledger` 异步挂载，不共享内存状态。
-3. **上游模型物理网关**：`gl/cloud-ai-gateway`，只读引用，不修改。
+3. **上游模型物理网关**：`cloud-ai-gateway`，只读引用，不修改。
 
 ---
 
