@@ -94,7 +94,7 @@ CLI session lease（~/.uws/cli-sessions.json）
 | 对外入口 | CLI `webtouch` |
 | 弃用别名 | `uws`（同一二进制） |
 | 本机状态目录 | `~/.uws`；Chrome profile 仍是 `~/.uws-chrome-debug` |
-| 许可 | 专有软件。本仓库不授予开源许可，也没有 OSI 许可证 |
+| 许可 | [MIT](LICENSE) |
 | QA Studio | `HOLD`。说明见 [QA Studio](docs/qa-studio/README.md) |
 
 ## 文档
@@ -111,4 +111,4 @@ CLI session lease（~/.uws/cli-sessions.json）
 
 ## 许可
 
-WebTouch 是专有软件。本仓库当前不授予开源许可，根目录也没有 `LICENSE`。第三方依赖继续遵守各自的许可证。
+WebTouch 以 [MIT 许可证](LICENSE)发布。第三方依赖及素材遵守各自的许可证。安全问题请参阅[安全政策](SECURITY.md)。
