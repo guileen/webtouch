@@ -10,7 +10,7 @@
 
 ### 1.1 前置依赖与初始化
 
-需要 Go 1.25.0、Python 3.11、uv 0.13.6、make、C/C++ 编译器、ripgrep、curl 和 unzip。Linux x86_64 与 macOS x86_64/arm64 可用同一工具链入口：
+需要 Go 1.25.0、Python 3.11、uv 0.13.6、make、C/C++ 编译器、ripgrep、curl 和 unzip。Linux x86_64 与 macOS x86_64/arm64 可用同一工具链入口；CI 在缺少 ripgrep 时通过系统包管理器安装。Python 契约测试每例使用独立临时模拟引擎，避免目标池跨测试耗尽：
 
 ```bash
 git clone https://github.com/guileen/webtouch.git

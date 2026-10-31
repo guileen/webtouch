@@ -103,7 +103,7 @@ def _generate_mtls_pki(dest: Path) -> dict[str, Path]:
     }
 
 
-# engine（session 级）由 tests/conftest.py 提供：构建并启动真实 uws-engine 二进制。
+# engine 由 tests/conftest.py 提供：每个用例独立启动模拟引擎。
 
 
 def test_tdd_api_01_lifecycle_precondition(engine):
@@ -367,7 +367,7 @@ def test_tdd_api_06_health_version_consistency(engine):
 
         stub.InitializeContext(InitContextRequest(task_id="task-6"), metadata=(("x-api-key", COORD_KEY),))
         hc2 = stub.HealthCheck(Empty(), metadata=(("x-api-key", MONITOR_KEY),))
-        # 会话级引擎被多个用例共享：断言初始化前后增量为 1，而非绝对计数
+        # 断言初始化前后增量为 1，而非依赖绝对计数
         assert hc2.active_targets == hc.active_targets + 1
 
 
