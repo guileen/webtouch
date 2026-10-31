@@ -12,7 +12,6 @@
 """
 
 import json
-import os
 import shutil
 import socket
 import sqlite3
@@ -43,8 +42,8 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
-@pytest.fixture(scope="module")
-def engine_with_logs():
+@pytest.fixture
+def engine_with_logs(engine_binary):
     """构建并启动真实 uws-engine（内置知识库 + --log-path），返回 gRPC 端口与日志库路径。"""
     tmp = Path(tempfile.mkdtemp(prefix="uws-sec-log-"))
     log_path = tmp / "online_logs.db"
@@ -55,23 +54,14 @@ def engine_with_logs():
             {"key": MONITOR_KEY, "role": "monitor"},
         ]
     }))
-    binary = tmp / "uws-engine"
-    env = dict(os.environ)
-    env.setdefault("GOCACHE", "/tmp/uws-go-cache")
-    build = subprocess.run(
-        ["go", "build", "-o", str(binary), "./cmd/uws-engine"],
-        cwd=ROOT, env=env, capture_output=True, text=True,
-    )
-    if build.returncode != 0:
-        pytest.fail(f"go build 失败:\n{build.stdout}\n{build.stderr}")
-
     port = _free_port()
     proc = subprocess.Popen(
         [
-            str(binary),
+            str(engine_binary),
             "--grpc-addr", f"127.0.0.1:{port}",
             "--api-key-file", str(keyfile),
             "--log-path", str(log_path),
+            "--max-targets", "1",  # Reuse one client session even on small runners.
         ],
         cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
     )
@@ -95,8 +85,10 @@ def engine_with_logs():
         out, err = proc.communicate(timeout=5)
         pytest.fail(f"引擎进程提前退出: {out}\n{err}")
 
-    yield {"port": port, "log_path": log_path}
+    ch = _channel(port)
+    yield {"port": port, "log_path": log_path, "channel": ch}
 
+    ch.close()
     proc.terminate()
     try:
         proc.wait(timeout=10)
@@ -120,22 +112,21 @@ def _rows(log_path: Path, intent_id: str) -> list[dict]:
 
 
 def _fill(engine, semantic: str, value: str, intent_id: str) -> None:
-    with _channel(engine["port"]) as ch:
-        stub = UwsEngineStub(ch)
-        stub.InitializeContext(
-            InitContextRequest(task_id="sec-pii"),
-            metadata=(("x-api-key", COORD_KEY),),
-        )
-        resp = stub.ExecuteAction(
-            ActionIntentRequest(
-                intent_id=intent_id,
-                target_semantic=semantic,
-                expected_action="input",
-                value=value,
-            ),
-            metadata=(("x-api-key", COORD_KEY),),
-        )
-        assert resp.success, f"{semantic} 动作应成功: {resp}"
+    stub = UwsEngineStub(engine["channel"])
+    stub.InitializeContext(
+        InitContextRequest(task_id="sec-pii"),
+        metadata=(("x-api-key", COORD_KEY),),
+    )
+    resp = stub.ExecuteAction(
+        ActionIntentRequest(
+            intent_id=intent_id,
+            target_semantic=semantic,
+            expected_action="input",
+            value=value,
+        ),
+        metadata=(("x-api-key", COORD_KEY),),
+    )
+    assert resp.success, f"{semantic} 动作应成功: {resp}"
 
 
 def _assert_no_plaintext(row: dict, secrets: list[str]) -> None:
