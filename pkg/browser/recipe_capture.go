@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"uws/pkg/contract"
 )
 
 // —— T-25 S1：站点 recipe「嗅探抓存」原始快照 ——
@@ -62,27 +63,9 @@ func RecipeCaptureDir() string {
 	return filepath.Join(home, ".uws", "recipes", "captures")
 }
 
-// RecipeCaptureResponse 是一次交换的响应侧元数据（不含响应体：S2 判槽位只需
-// 状态/类型/头；响应体抓取属 S4 回放期的运行时能力）。
-type RecipeCaptureResponse struct {
-	Status   int               `json:"status"`
-	MimeType string            `json:"mime_type,omitempty"`
-	Headers  map[string]string `json:"headers,omitempty"`
-}
-
-// RecipeCapture 是一次被判定「值得编译成 recipe」的原始 HTTP 交换快照。
-type RecipeCapture struct {
-	CapturedAt      string                 `json:"captured_at"`
-	RequestID       string                 `json:"request_id"`
-	ResourceType    string                 `json:"resource_type"`
-	Method          string                 `json:"method"`
-	URL             string                 `json:"url"`
-	Headers         map[string]string      `json:"headers,omitempty"`
-	PostData        string                 `json:"post_data,omitempty"`
-	PostDataEntries []string               `json:"post_data_entries,omitempty"`
-	Response        *RecipeCaptureResponse `json:"response,omitempty"`
-	Failure         string                 `json:"failure,omitempty"`
-}
+// 抓包数据契约由 contract 共享；别名保持浏览器调用方兼容。
+type RecipeCaptureResponse = contract.RecipeCaptureResponse
+type RecipeCapture = contract.RecipeCapture
 
 // IsCaptureCandidate 判定请求是否值得抓存：XHR/Fetch 且非安全方法
 // （GET/HEAD/OPTIONS 无请求体，不承载站点会话参数）。响应侧若为事件流，
@@ -98,14 +81,8 @@ func IsCaptureCandidate(resourceType, method string) bool {
 	return true
 }
 
-// IsCaptureContentType 判定响应是否为事件流（text/event-stream，忽略 charset 参数）。
-func IsCaptureContentType(mimeType string) bool {
-	m := strings.ToLower(strings.TrimSpace(mimeType))
-	if i := strings.IndexByte(m, ';'); i >= 0 {
-		m = strings.TrimSpace(m[:i])
-	}
-	return m == "text/event-stream"
-}
+// IsCaptureContentType 保留浏览器调用方兼容。
+func IsCaptureContentType(mimeType string) bool { return contract.IsCaptureContentType(mimeType) }
 
 // SanitizeHeaders 复制头部并把凭据类键的值替换为 [REDACTED]（键名保留：
 // S2 需要知道「这里有个 cookie 头」，但它不许拿到可直接冒用身份的值）。

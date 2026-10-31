@@ -44,8 +44,21 @@ def channel(port: int) -> grpc.Channel:
 
 
 @pytest.fixture(scope="session")
-def engine():
-    """构建并启动真实 uws-engine 二进制（一次性，供全部契约/集成用例共享）。"""
+def engine_binary(tmp_path_factory):
+    """Build once; each test starts its own isolated simulated engine."""
+    binary = tmp_path_factory.mktemp("engine-bin") / "uws-engine"
+    result = subprocess.run(
+        ["go", "build", "-o", str(binary), "./cmd/uws-engine"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        pytest.fail(f"go build 失败:\n{result.stdout}\n{result.stderr}")
+    return binary
+
+
+@pytest.fixture
+def engine(engine_binary):
+    """Start a fresh simulated engine per test to isolate target pools."""
     keys = [
         {"key": COORD_KEY, "role": "coordinator"},
         {"key": OPERATOR_KEY, "role": "operator"},
@@ -54,22 +67,9 @@ def engine():
     tmp = Path(tempfile.mkdtemp(prefix="uws-engine-test-"))
     keyfile = tmp / "keys.json"
     keyfile.write_text(json.dumps({"keys": keys}, ensure_ascii=False))
-    binary = tmp / "uws-engine"
-    env = dict(os.environ)
-    env.setdefault("GOCACHE", "/tmp/uws-go-cache")
-    env.setdefault("GOPATH", os.path.join(tmp, "gopath"))
-    gomodcache = subprocess.check_output(["go", "env", "GOMODCACHE"], text=True).strip()
-    env.setdefault("GOMODCACHE", gomodcache)
-    build = subprocess.run(
-        ["go", "build", "-o", str(binary), "./cmd/uws-engine"],
-        cwd=ROOT, env=env, capture_output=True, text=True,
-    )
-    if build.returncode != 0:
-        pytest.fail(f"go build 失败:\n{build.stdout}\n{build.stderr}")
-
     port = _free_port()
     proc = subprocess.Popen(
-        [str(binary), "--grpc-addr", f"127.0.0.1:{port}", "--api-key-file", str(keyfile)],
+        [str(engine_binary), "--grpc-addr", f"127.0.0.1:{port}", "--api-key-file", str(keyfile)],
         cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
     )
 

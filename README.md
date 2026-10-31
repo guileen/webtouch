@@ -107,7 +107,7 @@ CLI session lease（~/.uws/cli-sessions.json）
 
 ## 参与贡献
 
-环境、测试和目录边界见 [贡献指南](docs/contributing.md)。改行为前先改对应活规范，地图在 [docs/README.md](docs/README.md)。
+环境、固定工具版本和 `make ci` 验证入口见 [贡献指南](docs/contributing.md)。改行为前先改对应活规范，地图在 [docs/README.md](docs/README.md)。
 
 ## 许可
 

@@ -28,7 +28,6 @@ ORT_VERSION ?= 1.23.0
 ORT_LIB ?= $(CURDIR)/build/ort/libonnxruntime.$(ORT_VERSION).dylib
 ORT_SRC ?= $(firstword $(wildcard .venv/lib/*/site-packages/onnxruntime/capi/libonnxruntime.$(ORT_VERSION).dylib))
 
-GO_PACKAGES := ./pkg/browser ./pkg/matcher ./pkg/classifier ./pkg/verifier ./pkg/knowledge ./pkg/vlm ./pkg/engine ./apps/gateway ./pkg/qa ./pkg/challenge ./pkg/webcontrol ./cmd/...
 
 .PHONY: proto-gen proto-check build install release-local engine-restart gateway-restart version test test-go test-py lint fix pre-commit bench probe-test probe-wasm probe-bench ort-lib collect audit-consumers
 
@@ -115,14 +114,14 @@ gateway-restart: version
 	@printf '==> 网关运行版本: '; curl -fsS http://127.0.0.1:8000/v1/health | python3 -c 'import sys,json;print(json.load(sys.stdin).get("version","(无 version 字段：进程可能仍是旧构建)"))'
 
 ## 可复现的 CI/测试回路：lint + 基础测试 + 契约 + 构建 + 版本自检。
-ci: lint test pre-commit build
-	./webtouch daemon status
+ci: lint audit-layers audit-consumers proto-check test build
+	./bin/webtouch version
 
 ## Go 测试（逻辑层，包内 *_test.go；probe_wasm 为 C++，走 probe-test）
 test-go:
-	$(GO) test $(GO_PACKAGES)
+	$(GO) test -count=1 -v ./...
 
-## Python 测试（单元 + 集成 + 安全；骨架阶段全 skip，收集与运行均为绿灯）
+## Python 测试（本仓单元 + 集成 + 安全；缺失模块的历史测试见 pytest 排除清单）
 test-py:
 	$(PYTEST) tests/unit tests/integration tests/security -q
 
@@ -171,8 +170,7 @@ fix:
 	@echo "TODO(M2+): ruff format + gofmt -w + clang-format -i"
 
 ## 提交前门禁：lint + 分层/消费方边界 + 契约生成物一致性 + 全量基础测试 + gRPC 契约回归
-pre-commit: lint audit-layers audit-consumers proto-check test
-	$(PYTEST) tests/integration/test_grpc_contract.py -q
+pre-commit: ci
 
 ## 性能基准（TDD-PERF-*；骨架阶段全 skip）
 bench:

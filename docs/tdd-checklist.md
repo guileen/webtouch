@@ -24,13 +24,13 @@
 | 性能/基准测试 | 延迟、内存、并发红线（§9） | `benchmarks/...` |
 | 安全/模糊测试 | 注入、边界、伪造回调（§5/§7） | `tests/security/...` |
 
+> 本仓 CI 的 Python 范围及缺失模块的历史测试排除清单见 `tests/README.md` 和 `pyproject.toml`；历史勾选不代表本次 CI 验证。
+
 ### 0.3 CI 门禁与本地命令
 
-- `make test`：单元 + 集成测试全绿；核心模块（engine/pipeline）覆盖率门禁 ≥ 80%；
-- `pytest tests/integration/test_grpc_contract.py`：gRPC 契约回归，含 proto 兼容性（TDD-API-07）；
-- `make pre-commit`：lint（ruff / clang-format / mypy）+ 单测 + 契约测试全绿；
-- 在线引擎变更必须附带延迟/内存回归基准（§9），未带基准或劣化超限不允许合并；
-- 规则与蒸馏变更必须附带困难负样本与拓扑孤岛评估用例（对应 `contributing.md` §5）。
+- 初始化与固定版本见 [贡献指南](contributing.md)；`make ci` 和 `make pre-commit` 执行相同检查：gofmt、分层与消费方审计、Proto 一致性、全包 Go 与 Python 基础测试、构建及版本自检。
+- 未检出兄弟仓时消费方审计跳过；Ruff、mypy、clang-format 和覆盖率阈值尚非门禁。真实浏览器、WASM、ONNX 与桌面运行时需另验。
+- 在线引擎变更需延迟/内存回归；规则与蒸馏变更需困难负样本与拓扑孤岛评估。
 
 ### 0.4 里程碑映射
 

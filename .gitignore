@@ -23,3 +23,6 @@ bin/
 # 过程存证截图：含个人屏幕内容，默认不入库（规范见 docs/evidence/README.md）
 docs/evidence/**/*.png
 docs/evidence/**/*.jpg
+
+.tools/
+/webtouch-gateway

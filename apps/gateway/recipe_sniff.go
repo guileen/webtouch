@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"uws/apps/gateway/recipe"
-	"uws/pkg/browser"
+	"uws/pkg/contract"
 )
 
-// T-25 S2「嗅探编译」：把 S1 落盘的原始请求快照（browser.RecipeCapture）切成
+// T-25 S2「嗅探编译」：把 S1 落盘的原始请求快照（contract.RecipeCapture）切成
 // 「稳定骨架 ＋ 槽位」，产出契约 §13 的 recipe JSON。
 //
 // 与 recipe.Synthesizer 的分工（两者不重复）：
@@ -55,7 +55,7 @@ var (
 var credentialKeyHints = []string{"token", "csrf", "xsrf", "auth", "secret", "sig", "password", "cookie", "apikey", "api_key"}
 
 // CompileCaptureRecipe 把同站若干份原始抓存编译成一份 §13 recipe（恒 DRAFT）。
-func CompileCaptureRecipe(opts SniffOptions, captures []browser.RecipeCapture) (*SniffResult, error) {
+func CompileCaptureRecipe(opts SniffOptions, captures []contract.RecipeCapture) (*SniffResult, error) {
 	site := strings.ToLower(strings.TrimSpace(opts.Site))
 	if site == "" {
 		return nil, fmt.Errorf("sniff: 缺少 site")
@@ -391,10 +391,10 @@ func (c *sniffCompiler) sniffFormBody(raw string) (string, bool) {
 }
 
 // pickSniffCapture 选主请求：事件流响应 > 请求体更长者。其余留痕。
-func pickSniffCapture(captures []browser.RecipeCapture) (browser.RecipeCapture, []SniffNote) {
-	score := func(c browser.RecipeCapture) int {
+func pickSniffCapture(captures []contract.RecipeCapture) (contract.RecipeCapture, []SniffNote) {
+	score := func(c contract.RecipeCapture) int {
 		s := len(c.PostData)
-		if c.Response != nil && browser.IsCaptureContentType(c.Response.MimeType) {
+		if c.Response != nil && contract.IsCaptureContentType(c.Response.MimeType) {
 			s += 1 << 20
 		}
 		return s
@@ -417,11 +417,11 @@ func pickSniffCapture(captures []browser.RecipeCapture) (browser.RecipeCapture, 
 }
 
 // sniffResponseKind 由响应元数据判分帧类型（快照无响应体，故不判更细的帧结构）。
-func sniffResponseKind(c browser.RecipeCapture) string {
+func sniffResponseKind(c contract.RecipeCapture) string {
 	if c.Response == nil {
 		return "json"
 	}
-	if browser.IsCaptureContentType(c.Response.MimeType) {
+	if contract.IsCaptureContentType(c.Response.MimeType) {
 		return "sse_data_json"
 	}
 	mt := strings.ToLower(c.Response.MimeType)

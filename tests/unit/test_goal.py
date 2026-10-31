@@ -7,10 +7,16 @@ DSL 语法自动路由判定与站点/URL 推断。
 
 from __future__ import annotations
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def isolated_attach(monkeypatch):
+    """Fake-engine tests never consult or launch a host browser."""
+    monkeypatch.setattr("coordinator.goal.resolve_attach", lambda *args, **kwargs: "http://127.0.0.1:9222")
+
 import os
 from urllib.parse import quote_plus
-
-import pytest
 
 from coordinator.engine_client import ActionResult, HealthStatus, InitResult
 from coordinator.goal import (
