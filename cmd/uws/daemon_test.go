@@ -45,6 +45,8 @@ func TestEngineArgsDefaultAndOverride(t *testing.T) {
 // daemon 托管默认带 --vlm-learn-path <stateDir>/learned.json（2026-09-30 起），
 // UWS_LEARN=off 显式关闭，其他非空值可覆盖路径。
 func TestEngineArgsLearnedDefaultAndDisable(t *testing.T) {
+	t.Setenv("WEBTOUCH_STATE_DIR", "")
+	t.Setenv("UWS_LEARN", "")
 	dir := t.TempDir()
 	t.Setenv("UWS_ENGINE_DIR", dir)
 	t.Setenv("UWS_ENGINE_ARGS", "")
@@ -135,6 +137,7 @@ func TestRepoRootFromDir(t *testing.T) {
 }
 
 func TestDaemonStateDirEnvOverride(t *testing.T) {
+	t.Setenv("WEBTOUCH_STATE_DIR", "")
 	tmp := t.TempDir()
 	t.Setenv("UWS_ENGINE_DIR", tmp)
 	if got := daemonStateDir(); got != tmp {
