@@ -1,0 +1,518 @@
+haskell-org|https://haskell.org/|click:Documentation
+ocaml-org|https://ocaml.org/|click:Documentation
+erlang-org|https://erlang.org/|click:Documentation
+clojure-org|https://clojure.org/|click:Documentation
+racket-lang-org|https://racket-lang.org/|click:Documentation
+lua-org|https://lua.org/|click:Documentation
+perl-org|https://perl.org/|click:Documentation
+ziglang-org|https://ziglang.org/|click:Documentation
+nim-lang-org|https://nim-lang.org/|click:Documentation
+crystal-lang-org|https://crystal-lang.org/|click:Documentation
+julialang-org|https://julialang.org/|click:Documentation
+r-project-org|https://r-project.org/|click:Documentation
+octave-org|https://octave.org/|click:Documentation
+fortran-lang-org|https://fortran-lang.org/|click:Documentation
+groovy-lang-org|https://groovy-lang.org/|click:Documentation
+graalvm-org|https://graalvm.org/|click:Documentation
+elm-lang-org|https://elm-lang.org/|click:Documentation
+purescript-org|https://purescript.org/|click:Documentation
+rescript-lang-org|https://rescript-lang.org/|click:Documentation
+gleam-run|https://gleam.run/|click:Documentation
+vlang-io|https://vlang.io/|click:Documentation
+odin-lang-org|https://odin-lang.org/|click:Documentation
+roc-lang-org|https://roc-lang.org/|click:Documentation
+c3-lang-org|https://c3-lang.org/|click:Documentation
+dlang-org|https://dlang.org/|click:Documentation
+swi-prolog-org|https://swi-prolog.org/|click:Documentation
+forth-standard-org|https://forth-standard.org/|click:Documentation
+openjdk-org|https://openjdk.org/|click:Documentation
+isocpp-org|https://isocpp.org/|click:Documentation
+cppreference-com|https://cppreference.com/|click:Documentation
+gcc-gnu-org|https://gcc.gnu.org/|click:Documentation
+llvm-org|https://llvm.org/|click:Documentation
+cmake-org|https://cmake.org/|click:Documentation
+mesonbuild-com|https://mesonbuild.com/|click:Documentation
+ninja-build-org|https://ninja-build.org/|click:Documentation
+bazel-build|https://bazel.build/|click:Documentation
+gradle-org|https://gradle.org/|click:Documentation
+ant-apache-org|https://ant.apache.org/|click:Documentation
+maven-apache-org|https://maven.apache.org/|click:Documentation
+quarkus-io|https://quarkus.io/|click:Documentation
+micronaut-io|https://micronaut.io/|click:Documentation
+vertx-io|https://vertx.io/|click:Documentation
+jhipster-tech|https://jhipster.tech/|click:Documentation
+baeldung-com|https://baeldung.com/|click:Documentation
+jetbrains-com|https://jetbrains.com/|click:Documentation
+eclipse-org|https://eclipse.org/|click:Documentation
+netbeans-apache-org|https://netbeans.apache.org/|click:Documentation
+angular-dev|https://angular.dev/|click:Documentation
+emberjs-com|https://emberjs.com/|click:Documentation
+backbonejs-org|https://backbonejs.org/|click:Documentation
+knockoutjs-com|https://knockoutjs.com/|click:Documentation
+alpinejs-dev|https://alpinejs.dev/|click:Documentation
+solidjs-com|https://solidjs.com/|click:Documentation
+preactjs-com|https://preactjs.com/|click:Documentation
+lit-dev|https://lit.dev/|click:Documentation
+stenciljs-com|https://stenciljs.com/|click:Documentation
+qwik-dev|https://qwik.dev/|click:Documentation
+markojs-com|https://markojs.com/|click:Documentation
+aurelia-io|https://aurelia.io/|click:Documentation
+mithril-js-org|https://mithril.js.org/|click:Documentation
+hotwired-dev|https://hotwired.dev/|click:Documentation
+bulma-io|https://bulma.io/|click:Documentation
+foundation-zurb-com|https://foundation.zurb.com/|click:Documentation
+materializecss-com|https://materializecss.com/|click:Documentation
+getuikit-com|https://getuikit.com/|click:Documentation
+semantic-ui-com|https://semantic-ui.com/|click:Documentation
+purecss-io|https://purecss.io/|click:Documentation
+picnicss-com|https://picnicss.com/|click:Documentation
+milligram-io|https://milligram.io/|click:Documentation
+getskeleton-com|https://getskeleton.com/|click:Documentation
+water-css|https://water.css/|click:Documentation
+newcss-net|https://newcss.net/|click:Documentation
+redux-js-org|https://redux.js.org/|click:Documentation
+mobx-js-org|https://mobx.js.org/|click:Documentation
+xstate-js-org|https://xstate.js.org/|click:Documentation
+tanstack-com|https://tanstack.com/|click:Documentation
+apollographql-com|https://apollographql.com/|click:Documentation
+graphql-org|https://graphql.org/|click:Documentation
+relay-dev|https://relay.dev/|click:Documentation
+jestjs-io|https://jestjs.io/|click:Documentation
+vitest-dev|https://vitest.dev/|click:Documentation
+mochajs-org|https://mochajs.org/|click:Documentation
+jasmine-github-io|https://jasmine.github.io/|click:Documentation
+cypress-io|https://cypress.io/|click:Documentation
+playwright-dev|https://playwright.dev/|click:Documentation
+selenium-dev|https://selenium.dev/|click:Documentation
+karma-runner-github-io|https://karma-runner.github.io/|click:Documentation
+testing-library-com|https://testing-library.com/|click:Documentation
+chaijs-com|https://chaijs.com/|click:Documentation
+sinonjs-org|https://sinonjs.org/|click:Documentation
+rspack-rs|https://rspack.rs/|click:Documentation
+turbo-build|https://turbo.build/|click:Documentation
+swc-rs|https://swc.rs/|click:Documentation
+babeljs-io|https://babeljs.io/|click:Documentation
+gulpjs-com|https://gulpjs.com/|click:Documentation
+gruntjs-com|https://gruntjs.com/|click:Documentation
+browserify-org|https://browserify.org/|click:Documentation
+yarnpkg-com|https://yarnpkg.com/|click:Documentation
+parceljs-org|https://parceljs.org/|click:Documentation
+snowpack-dev|https://snowpack.dev/|click:Documentation
+11ty-dev|https://11ty.dev/|click:Documentation
+vitepress-dev|https://vitepress.dev/|click:Documentation
+vuepress-vuejs-org|https://vuepress.vuejs.org/|click:Documentation
+remix-run|https://remix.run/|click:Documentation
+redwoodjs-com|https://redwoodjs.com/|click:Documentation
+meteor-com|https://meteor.com/|click:Documentation
+sailsjs-com|https://sailsjs.com/|click:Documentation
+adonisjs-com|https://adonisjs.com/|click:Documentation
+koajs-com|https://koajs.com/|click:Documentation
+expressjs-com|https://expressjs.com/|click:Documentation
+fastify-dev|https://fastify.dev/|click:Documentation
+nestjs-com|https://nestjs.com/|click:Documentation
+hapi-dev|https://hapi.dev/|click:Documentation
+strapi-io|https://strapi.io/|click:Documentation
+keystonejs-com|https://keystonejs.com/|click:Documentation
+payloadcms-com|https://payloadcms.com/|click:Documentation
+ghost-org|https://ghost.org/|click:Documentation
+wordpress-org|https://wordpress.org/|click:Documentation
+drupal-org|https://drupal.org/|click:Documentation
+joomla-org|https://joomla.org/|click:Documentation
+typo3-org|https://typo3.org/|click:Documentation
+craftcms-com|https://craftcms.com/|click:Documentation
+mysql-com|https://mysql.com/|click:Documentation
+mariadb-org|https://mariadb.org/|click:Documentation
+sqlite-org|https://sqlite.org/|click:Documentation
+mongodb-com|https://mongodb.com/|click:Documentation
+couchdb-apache-org|https://couchdb.apache.org/|click:Documentation
+cassandra-apache-org|https://cassandra.apache.org/|click:Documentation
+neo4j-com|https://neo4j.com/|click:Documentation
+influxdata-com|https://influxdata.com/|click:Documentation
+clickhouse-com|https://clickhouse.com/|click:Documentation
+duckdb-org|https://duckdb.org/|click:Documentation
+elastic-co|https://elastic.co/|click:Documentation
+solr-apache-org|https://solr.apache.org/|click:Documentation
+opensearch-org|https://opensearch.org/|click:Documentation
+etcd-io|https://etcd.io/|click:Documentation
+consul-io|https://consul.io/|click:Documentation
+developer-hashicorp-com|https://developer.hashicorp.com/|click:Documentation
+rabbitmq-com|https://rabbitmq.com/|click:Documentation
+kafka-apache-org|https://kafka.apache.org/|click:Documentation
+nats-io|https://nats.io/|click:Documentation
+zeromq-org|https://zeromq.org/|click:Documentation
+mosquitto-org|https://mosquitto.org/|click:Documentation
+memcached-org|https://memcached.org/|click:Documentation
+rethinkdb-com|https://rethinkdb.com/|click:Documentation
+arangodb-com|https://arangodb.com/|click:Documentation
+supabase-com|https://supabase.com/|click:Documentation
+planetscale-com|https://planetscale.com/|click:Documentation
+cockroachlabs-com|https://cockroachlabs.com/|click:Documentation
+yugabyte-com|https://yugabyte.com/|click:Documentation
+timescale-com|https://timescale.com/|click:Documentation
+questdb-io|https://questdb.io/|click:Documentation
+prometheus-io|https://prometheus.io/|click:Documentation
+grafana-com|https://grafana.com/|click:Documentation
+jaegertracing-io|https://jaegertracing.io/|click:Documentation
+opentelemetry-io|https://opentelemetry.io/|click:Documentation
+zipkin-io|https://zipkin.io/|click:Documentation
+sentry-io|https://sentry.io/|click:Documentation
+datadoghq-com|https://datadoghq.com/|click:Documentation
+newrelic-com|https://newrelic.com/|click:Documentation
+splunk-com|https://splunk.com/|click:Documentation
+helm-sh|https://helm.sh/|click:Documentation
+argoproj-github-io|https://argoproj.github.io/|click:Documentation
+tekton-dev|https://tekton.dev/|click:Documentation
+jenkins-io|https://jenkins.io/|click:Documentation
+circleci-com|https://circleci.com/|click:Documentation
+travis-ci-com|https://travis-ci.com/|click:Documentation
+gitlab-com|https://gitlab.com/|click:Documentation
+bitbucket-org|https://bitbucket.org/|click:Documentation
+gitea-com|https://gitea.com/|click:Documentation
+forgejo-org|https://forgejo.org/|click:Documentation
+gogs-io|https://gogs.io/|click:Documentation
+drone-io|https://drone.io/|click:Documentation
+concourse-ci-org|https://concourse-ci.org/|click:Documentation
+ansible-com|https://ansible.com/|click:Documentation
+chef-io|https://chef.io/|click:Documentation
+puppet-com|https://puppet.com/|click:Documentation
+saltproject-io|https://saltproject.io/|click:Documentation
+pulumi-com|https://pulumi.com/|click:Documentation
+crossplane-io|https://crossplane.io/|click:Documentation
+packer-io|https://packer.io/|click:Documentation
+vagrantup-com|https://vagrantup.com/|click:Documentation
+nomadproject-io|https://nomadproject.io/|click:Documentation
+virtualbox-org|https://virtualbox.org/|click:Documentation
+qemu-org|https://qemu.org/|click:Documentation
+libvirt-org|https://libvirt.org/|click:Documentation
+proxmox-com|https://proxmox.com/|click:Documentation
+openstack-org|https://openstack.org/|click:Documentation
+nixos-org|https://nixos.org/|click:Documentation
+guix-gnu-org|https://guix.gnu.org/|click:Documentation
+docs-aws-amazon-com|https://docs.aws.amazon.com/|click:Documentation
+cloud-google-com|https://cloud.google.com/|click:Documentation
+azure-microsoft-com|https://azure.microsoft.com/|click:Documentation
+digitalocean-com|https://digitalocean.com/|click:Documentation
+linode-com|https://linode.com/|click:Documentation
+vultr-com|https://vultr.com/|click:Documentation
+heroku-com|https://heroku.com/|click:Documentation
+netlify-com|https://netlify.com/|click:Documentation
+vercel-com|https://vercel.com/|click:Documentation
+cloudflare-com|https://cloudflare.com/|click:Documentation
+fastly-com|https://fastly.com/|click:Documentation
+render-com|https://render.com/|click:Documentation
+fly-io|https://fly.io/|click:Documentation
+railway-app|https://railway.app/|click:Documentation
+k6-io|https://k6.io/|click:Documentation
+locust-io|https://locust.io/|click:Documentation
+kernel-org|https://kernel.org/|click:Documentation
+debian-org|https://debian.org/|click:Documentation
+ubuntu-com|https://ubuntu.com/|click:Documentation
+archlinux-org|https://archlinux.org/|click:Documentation
+fedoraproject-org|https://fedoraproject.org/|click:Documentation
+centos-org|https://centos.org/|click:Documentation
+alpinelinux-org|https://alpinelinux.org/|click:Documentation
+linuxmint-com|https://linuxmint.com/|click:Documentation
+opensuse-org|https://opensuse.org/|click:Documentation
+gentoo-org|https://gentoo.org/|click:Documentation
+slackware-com|https://slackware.com/|click:Documentation
+manjaro-org|https://manjaro.org/|click:Documentation
+rockylinux-org|https://rockylinux.org/|click:Documentation
+almalinux-org|https://almalinux.org/|click:Documentation
+freebsd-org|https://freebsd.org/|click:Documentation
+openbsd-org|https://openbsd.org/|click:Documentation
+netbsd-org|https://netbsd.org/|click:Documentation
+illumos-org|https://illumos.org/|click:Documentation
+gnome-org|https://gnome.org/|click:Documentation
+kde-org|https://kde.org/|click:Documentation
+xfce-org|https://xfce.org/|click:Documentation
+mate-desktop-org|https://mate-desktop.org/|click:Documentation
+i3wm-org|https://i3wm.org/|click:Documentation
+swaywm-org|https://swaywm.org/|click:Documentation
+hyprland-org|https://hyprland.org/|click:Documentation
+awesomewm-org|https://awesomewm.org/|click:Documentation
+vim-org|https://vim.org/|click:Documentation
+neovim-io|https://neovim.io/|click:Documentation
+gnu-org|https://gnu.org/|click:Documentation
+helix-editor-com|https://helix-editor.com/|click:Documentation
+zsh-org|https://zsh.org/|click:Documentation
+fishshell-com|https://fishshell.com/|click:Documentation
+nushell-sh|https://nushell.sh/|click:Documentation
+starship-rs|https://starship.rs/|click:Documentation
+ohmyzsh-sh|https://ohmyzsh.sh/|click:Documentation
+ohmyposh-dev|https://ohmyposh.dev/|click:Documentation
+brew-sh|https://brew.sh/|click:Submit
+chocolatey-org|https://chocolatey.org/|click:Submit
+flathub-org|https://flathub.org/|click:Submit
+snapcraft-io|https://snapcraft.io/|click:Submit
+appimage-org|https://appimage.org/|click:Submit
+rubygems-org|https://rubygems.org/|click:Submit
+packagist-org|https://packagist.org/|click:Submit
+hex-pm|https://hex.pm/|click:Submit
+pub-dev|https://pub.dev/|click:Submit
+nuget-org|https://nuget.org/|click:Submit
+hackage-haskell-org|https://hackage.haskell.org/|click:Submit
+conan-io|https://conan.io/|click:Submit
+vcpkg-io|https://vcpkg.io/|click:Submit
+anaconda-com|https://anaconda.com/|click:Submit
+docsify-js-org|https://docsify.js.org/|click:Documentation
+mkdocs-org|https://mkdocs.org/|click:Documentation
+sphinx-doc-org|https://sphinx-doc.org/|click:Documentation
+gitbook-com|https://gitbook.com/|click:Documentation
+mit-edu|https://mit.edu/|input:email=webtouch
+ocw-mit-edu|https://ocw.mit.edu/|input:email=webtouch
+stanford-edu|https://stanford.edu/|input:email=webtouch
+berkeley-edu|https://berkeley.edu/|input:email=webtouch
+cmu-edu|https://cmu.edu/|input:email=webtouch
+harvard-edu|https://harvard.edu/|input:email=webtouch
+caltech-edu|https://caltech.edu/|input:email=webtouch
+princeton-edu|https://princeton.edu/|input:email=webtouch
+yale-edu|https://yale.edu/|input:email=webtouch
+ox-ac-uk|https://ox.ac.uk/|input:email=webtouch
+cam-ac-uk|https://cam.ac.uk/|input:email=webtouch
+ethz-ch|https://ethz.ch/|input:email=webtouch
+tum-de|https://tum.de/|input:email=webtouch
+tsinghua-edu-cn|https://tsinghua.edu.cn/|input:email=webtouch
+pku-edu-cn|https://pku.edu.cn/|input:email=webtouch
+coursera-org|https://coursera.org/|input:email=webtouch
+edx-org|https://edx.org/|input:email=webtouch
+khanacademy-org|https://khanacademy.org/|input:email=webtouch
+udacity-com|https://udacity.com/|input:email=webtouch
+freecodecamp-org|https://freecodecamp.org/|input:email=webtouch
+codecademy-com|https://codecademy.com/|input:email=webtouch
+leetcode-com|https://leetcode.com/|click:Submit
+hackerrank-com|https://hackerrank.com/|click:Submit
+exercism-org|https://exercism.org/|click:Submit
+codewars-com|https://codewars.com/|click:Submit
+geeksforgeeks-org|https://geeksforgeeks.org/|click:Submit
+tutorialspoint-com|https://tutorialspoint.com/|click:Submit
+javatpoint-com|https://javatpoint.com/|click:Submit
+programiz-com|https://programiz.com/|click:Submit
+scipy-org|https://scipy.org/|click:Documentation
+scikit-learn-org|https://scikit-learn.org/|click:Documentation
+pandas-pydata-org|https://pandas.pydata.org/|click:Documentation
+matplotlib-org|https://matplotlib.org/|click:Documentation
+tensorflow-org|https://tensorflow.org/|click:Documentation
+keras-io|https://keras.io/|click:Documentation
+opencv-org|https://opencv.org/|click:Documentation
+huggingface-co|https://huggingface.co/|click:Documentation
+kaggle-com|https://kaggle.com/|click:Documentation
+openai-com|https://openai.com/|click:Documentation
+deepmind-google|https://deepmind.google/|click:Documentation
+anthropic-com|https://anthropic.com/|click:Documentation
+britannica-com|https://britannica.com/|input:search=webtouch
+dictionary-com|https://dictionary.com/|input:search=webtouch
+merriam-webster-com|https://merriam-webster.com/|input:search=webtouch
+collinsdictionary-com|https://collinsdictionary.com/|input:search=webtouch
+cambridge-org|https://cambridge.org/|input:search=webtouch
+thefreedictionary-com|https://thefreedictionary.com/|input:search=webtouch
+wiktionary-org|https://wiktionary.org/|input:search=webtouch
+wikibooks-org|https://wikibooks.org/|input:search=webtouch
+wikisource-org|https://wikisource.org/|input:search=webtouch
+wikiquote-org|https://wikiquote.org/|input:search=webtouch
+wikiversity-org|https://wikiversity.org/|input:search=webtouch
+wikinews-org|https://wikinews.org/|input:search=webtouch
+wikimedia-org|https://wikimedia.org/|input:search=webtouch
+gutenberg-org|https://gutenberg.org/|input:search=webtouch
+archive-org|https://archive.org/|input:search=webtouch
+openlibrary-org|https://openlibrary.org/|input:search=webtouch
+loc-gov|https://loc.gov/|input:email=webtouch
+nasa-gov|https://nasa.gov/|input:email=webtouch
+noaa-gov|https://noaa.gov/|input:email=webtouch
+usgs-gov|https://usgs.gov/|input:email=webtouch
+nih-gov|https://nih.gov/|input:email=webtouch
+cdc-gov|https://cdc.gov/|input:email=webtouch
+who-int|https://who.int/|input:email=webtouch
+un-org|https://un.org/|input:email=webtouch
+worldbank-org|https://worldbank.org/|input:email=webtouch
+imf-org|https://imf.org/|input:email=webtouch
+oecd-org|https://oecd.org/|input:email=webtouch
+europa-eu|https://europa.eu/|input:email=webtouch
+gov-uk|https://gov.uk/|input:email=webtouch
+unesco-org|https://unesco.org/|input:email=webtouch
+unicef-org|https://unicef.org/|input:email=webtouch
+redcross-org|https://redcross.org/|input:email=webtouch
+nature-com|https://nature.com/|input:search=webtouch
+science-org|https://science.org/|input:search=webtouch
+sciencedirect-com|https://sciencedirect.com/|input:search=webtouch
+springer-com|https://springer.com/|input:search=webtouch
+wiley-com|https://wiley.com/|input:search=webtouch
+tandfonline-com|https://tandfonline.com/|input:search=webtouch
+jstor-org|https://jstor.org/|input:search=webtouch
+arxiv-org|https://arxiv.org/|input:search=webtouch
+pubmed-ncbi-nlm-nih-gov|https://pubmed.ncbi.nlm.nih.gov/|input:search=webtouch
+plos-org|https://plos.org/|input:search=webtouch
+frontiersin-org|https://frontiersin.org/|input:search=webtouch
+mdpi-com|https://mdpi.com/|input:search=webtouch
+cell-com|https://cell.com/|input:search=webtouch
+ieee-org|https://ieee.org/|input:search=webtouch
+acm-org|https://acm.org/|input:search=webtouch
+aps-org|https://aps.org/|input:search=webtouch
+iop-org|https://iop.org/|input:search=webtouch
+rsc-org|https://rsc.org/|input:search=webtouch
+acs-org|https://acs.org/|input:search=webtouch
+ibm-com|https://ibm.com/|click:Sign up
+intel-com|https://intel.com/|click:Sign up
+nvidia-com|https://nvidia.com/|click:Sign up
+amd-com|https://amd.com/|click:Sign up
+arm-com|https://arm.com/|click:Sign up
+qualcomm-com|https://qualcomm.com/|click:Sign up
+siemens-com|https://siemens.com/|click:Sign up
+bosch-com|https://bosch.com/|click:Sign up
+philips-com|https://philips.com/|click:Sign up
+nestle-com|https://nestle.com/|click:Sign up
+coca-cola-com|https://coca-cola.com/|click:Sign up
+mcdonalds-com|https://mcdonalds.com/|click:Sign up
+nike-com|https://nike.com/|click:Sign up
+adidas-com|https://adidas.com/|click:Sign up
+ikea-com|https://ikea.com/|click:Sign up
+walmart-com|https://walmart.com/|click:Sign up
+target-com|https://target.com/|click:Sign up
+bestbuy-com|https://bestbuy.com/|click:Sign up
+costco-com|https://costco.com/|click:Sign up
+tesla-com|https://tesla.com/|click:Sign up
+toyota-com|https://toyota.com/|click:Sign up
+bmw-com|https://bmw.com/|click:Sign up
+mercedes-benz-com|https://mercedes-benz.com/|click:Sign up
+ford-com|https://ford.com/|click:Sign up
+gm-com|https://gm.com/|click:Sign up
+honda-com|https://honda.com/|click:Sign up
+volkswagen-com|https://volkswagen.com/|click:Sign up
+boeing-com|https://boeing.com/|click:Sign up
+airbus-com|https://airbus.com/|click:Sign up
+ge-com|https://ge.com/|click:Sign up
+3m-com|https://3m.com/|click:Sign up
+dupont-com|https://dupont.com/|click:Sign up
+basf-com|https://basf.com/|click:Sign up
+dow-com|https://dow.com/|click:Sign up
+exxonmobil-com|https://exxonmobil.com/|click:Sign up
+shell-com|https://shell.com/|click:Sign up
+bp-com|https://bp.com/|click:Sign up
+totalenergies-com|https://totalenergies.com/|click:Sign up
+chevron-com|https://chevron.com/|click:Sign up
+visa-com|https://visa.com/|click:Sign in
+mastercard-com|https://mastercard.com/|click:Sign in
+paypal-com|https://paypal.com/|click:Sign in
+stripe-com|https://stripe.com/|click:Sign in
+squareup-com|https://squareup.com/|click:Sign in
+adyen-com|https://adyen.com/|click:Sign in
+westernunion-com|https://westernunion.com/|click:Sign in
+wise-com|https://wise.com/|click:Sign in
+revolut-com|https://revolut.com/|click:Sign in
+n26-com|https://n26.com/|click:Sign in
+monzo-com|https://monzo.com/|click:Sign in
+chase-com|https://chase.com/|click:Sign in
+bankofamerica-com|https://bankofamerica.com/|click:Sign in
+wellsfargo-com|https://wellsfargo.com/|click:Sign in
+citi-com|https://citi.com/|click:Sign in
+hsbc-com|https://hsbc.com/|click:Sign in
+barclays-com|https://barclays.com/|click:Sign in
+santander-com|https://santander.com/|click:Sign in
+deutschebank-com|https://deutschebank.com/|click:Sign in
+ubs-com|https://ubs.com/|click:Sign in
+goldmansachs-com|https://goldmansachs.com/|click:Sign in
+morganstanley-com|https://morganstanley.com/|click:Sign in
+blackrock-com|https://blackrock.com/|click:Sign in
+vanguard-com|https://vanguard.com/|click:Sign in
+fidelity-com|https://fidelity.com/|click:Sign in
+schwab-com|https://schwab.com/|click:Sign in
+etrade-com|https://etrade.com/|click:Sign in
+robinhood-com|https://robinhood.com/|click:Sign in
+coinbase-com|https://coinbase.com/|click:Sign in
+binance-com|https://binance.com/|click:Sign in
+kraken-com|https://kraken.com/|click:Sign in
+delta-com|https://delta.com/|click:Sign in
+united-com|https://united.com/|click:Sign in
+aa-com|https://aa.com/|click:Sign in
+southwest-com|https://southwest.com/|click:Sign in
+emirates-com|https://emirates.com/|click:Sign in
+lufthansa-com|https://lufthansa.com/|click:Sign in
+airfrance-com|https://airfrance.com/|click:Sign in
+klm-com|https://klm.com/|click:Sign in
+iberia-com|https://iberia.com/|click:Sign in
+ryanair-com|https://ryanair.com/|click:Sign in
+easyjet-com|https://easyjet.com/|click:Sign in
+booking-com|https://booking.com/|click:Sign in
+expedia-com|https://expedia.com/|click:Sign in
+tripadvisor-com|https://tripadvisor.com/|click:Sign in
+airbnb-com|https://airbnb.com/|click:Sign in
+marriott-com|https://marriott.com/|click:Sign in
+hilton-com|https://hilton.com/|click:Sign in
+ihg-com|https://ihg.com/|click:Sign in
+accor-com|https://accor.com/|click:Sign in
+hyatt-com|https://hyatt.com/|click:Sign in
+uber-com|https://uber.com/|click:Sign in
+lyft-com|https://lyft.com/|click:Sign in
+usps-com|https://usps.com/|input:search=webtouch
+canada-ca|https://canada.ca/|input:search=webtouch
+australia-gov-au|https://australia.gov.au/|input:search=webtouch
+japan-go-jp|https://japan.go.jp/|input:search=webtouch
+korea-net|https://korea.net/|input:search=webtouch
+france-fr|https://france.fr/|input:search=webtouch
+bund-de|https://bund.de/|input:search=webtouch
+gov-br|https://gov.br/|input:search=webtouch
+bbc-com|https://bbc.com/|click:Sign up
+cnn-com|https://cnn.com/|click:Sign up
+nytimes-com|https://nytimes.com/|click:Sign up
+washingtonpost-com|https://washingtonpost.com/|click:Sign up
+theguardian-com|https://theguardian.com/|click:Sign up
+reuters-com|https://reuters.com/|click:Sign up
+apnews-com|https://apnews.com/|click:Sign up
+bloomberg-com|https://bloomberg.com/|click:Sign up
+forbes-com|https://forbes.com/|click:Sign up
+wsj-com|https://wsj.com/|click:Sign up
+economist-com|https://economist.com/|click:Sign up
+ft-com|https://ft.com/|click:Sign up
+aljazeera-com|https://aljazeera.com/|click:Sign up
+npr-org|https://npr.org/|click:Sign up
+pbs-org|https://pbs.org/|click:Sign up
+nationalgeographic-com|https://nationalgeographic.com/|click:Sign up
+smithsonianmag-com|https://smithsonianmag.com/|click:Sign up
+history-com|https://history.com/|click:Sign up
+britishmuseum-org|https://britishmuseum.org/|input:email=webtouch
+louvre-fr|https://louvre.fr/|input:email=webtouch
+metmuseum-org|https://metmuseum.org/|input:email=webtouch
+getty-edu|https://getty.edu/|input:email=webtouch
+moma-org|https://moma.org/|input:email=webtouch
+tate-org-uk|https://tate.org.uk/|input:email=webtouch
+rijksmuseum-nl|https://rijksmuseum.nl/|input:email=webtouch
+vam-ac-uk|https://vam.ac.uk/|input:email=webtouch
+fifa-com|https://fifa.com/|input:email=webtouch
+olympics-com|https://olympics.com/|input:email=webtouch
+nba-com|https://nba.com/|input:email=webtouch
+nfl-com|https://nfl.com/|input:email=webtouch
+mlb-com|https://mlb.com/|input:email=webtouch
+nhl-com|https://nhl.com/|input:email=webtouch
+wimbledon-com|https://wimbledon.com/|input:email=webtouch
+uefa-com|https://uefa.com/|input:email=webtouch
+formula1-com|https://formula1.com/|input:email=webtouch
+motogp-com|https://motogp.com/|input:email=webtouch
+espn-com|https://espn.com/|input:email=webtouch
+ebay-com|https://ebay.com/|input:search=webtouch
+etsy-com|https://etsy.com/|input:search=webtouch
+shopify-com|https://shopify.com/|input:search=webtouch
+alibaba-com|https://alibaba.com/|input:search=webtouch
+aliexpress-com|https://aliexpress.com/|input:search=webtouch
+zara-com|https://zara.com/|input:search=webtouch
+hm-com|https://hm.com/|input:search=webtouch
+uniqlo-com|https://uniqlo.com/|input:search=webtouch
+decathlon-com|https://decathlon.com/|input:search=webtouch
+rei-com|https://rei.com/|input:search=webtouch
+lowes-com|https://lowes.com/|input:search=webtouch
+homedepot-com|https://homedepot.com/|input:search=webtouch
+wayfair-com|https://wayfair.com/|input:search=webtouch
+weather-com|https://weather.com/|input:search=webtouch
+accuweather-com|https://accuweather.com/|input:search=webtouch
+timeanddate-com|https://timeanddate.com/|input:search=webtouch
+xe-com|https://xe.com/|input:search=webtouch
+bing-com|https://bing.com/|input:search=webtouch
+yandex-com|https://yandex.com/|input:search=webtouch
+baidu-com|https://baidu.com/|input:search=webtouch
+naver-com|https://naver.com/|input:search=webtouch
+yahoo-com|https://yahoo.com/|input:search=webtouch
+aol-com|https://aol.com/|input:search=webtouch
+msn-com|https://msn.com/|input:search=webtouch
+wolframalpha-com|https://wolframalpha.com/|input:search=webtouch
+symbolab-com|https://symbolab.com/|input:search=webtouch
+mathway-com|https://mathway.com/|input:search=webtouch
+desmos-com|https://desmos.com/|input:search=webtouch
+geogebra-org|https://geogebra.org/|input:search=webtouch

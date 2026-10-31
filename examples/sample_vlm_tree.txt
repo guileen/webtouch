@@ -1,0 +1,6 @@
+# UWS WASM 探针 ExportToVLMFormat 输出样例（混合指挥演示/测试共用）
+# 格式：[node_id] tag(role) "semantic_text" [offscreen]
+[12] button(button) "立即购买"
+[31] input(textbox) "验证码"
+[52] a(link) "隐私条款" [offscreen]
+[67] div(group) "¥99 会员价" [offscreen]

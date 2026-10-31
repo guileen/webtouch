@@ -1,0 +1,154 @@
+{
+  "site": "qianwen",
+  "status": "DRAFT",
+  "match": {
+    "origin": "https://www.qianwen.com",
+    "path_re": "^/chat"
+  },
+  "request": {
+    "method": "POST",
+    "url_template": "https://chat2.qianwen.com/api/v2/chat?ch=tongyi_redirect&biz_id=ai_qwen&fe_version=1.0.0&chat_client=h5&device=pc&fr=pc&pr=qwen&la=zh-CN&tz=UTC&wv=4.9.1&tq=SD&ve=4.9.1",
+    "headers": {
+      "Content-Type": "application/json",
+      "accept": "application/json, text/event-stream, text/plain, */*",
+      "x-device-id": "{{ut}}",
+      "x-chat-id": "{{req_id}}",
+      "x-wpk-reqid": "{{req_id}}",
+      "x-chat-biz": "{\"chatId\":\"{{req_id}}\",\"agentId\":\"\",\"enableWebp\":\"\",\"runtimeEnabled\":true,\"debugEnabled\":true}",
+      "x-wpk-bid": "66ur41cs-cntu1744",
+      "x-wpk-rel": "",
+      "x-platform": "pc_tongyi",
+      "prod_id": "tongyi"
+    },
+    "signer": {
+      "path": "__QIANWEN_CHAT_SDK__.qwenSign",
+      "url_from": "signedUrl",
+      "headers_from": "signedHeader",
+      "timeout_ms": 10000
+    },
+    "body_builders": {
+      "body": {
+        "kind": "json_object",
+        "template": {
+          "req_id": "{{req_id}}",
+          "parent_req_id": "{{parent_req_id}}",
+          "messages": [
+            {
+              "mime_type": "text/plain",
+              "content": "{{prompt}}",
+              "meta_data": {
+                "ori_query": "{{prompt}}"
+              },
+              "status": "complete"
+            }
+          ],
+          "scene": "chat",
+          "sub_scene": "",
+          "scene_param": {
+            "if_slot": "topic_existing",
+            "then": "continue_chat",
+            "else": "first_turn"
+          },
+          "session_id": {
+            "if_slot": "session_from_url",
+            "then": "{{session_from_url}}",
+            "else": "{{session_new}}"
+          },
+          "biz_id": "ai_qwen",
+          "topic_id": {
+            "if_slot": "topic_existing",
+            "then": "{{topic_existing}}",
+            "else": "{{topic_new}}"
+          },
+          "model": "Qwen",
+          "from": "default",
+          "protocol_version": "v2",
+          "messages_merge": false,
+          "chat_client": "h5",
+          "deep_search": null,
+          "temporary": false,
+          "params_extra": {
+            "supports_cowork": "true"
+          },
+          "chat_mode": "quick",
+          "cms_test_data_ids": "@17570_A@16860_B@17307_D@17980_C@17219_B@17936_B@17260_B@16901_B@17131_B@",
+          "bucket": {}
+        }
+      }
+    },
+    "timeout_ms": 90000
+  },
+  "slots": [
+    {
+      "name": "ut",
+      "producer": "cookie",
+      "key": "b-user-id",
+      "scope": "page_load"
+    },
+    {
+      "name": "session_from_url",
+      "producer": "from_url",
+      "re": "^/chat/([0-9a-f]{32})",
+      "optional": true,
+      "scope": "conversation"
+    },
+    {
+      "name": "session_new",
+      "producer": "fresh_hex",
+      "length": 32,
+      "scope": "request"
+    },
+    {
+      "name": "topic_existing",
+      "producer": "fetch_field",
+      "endpoint": "https://chat2-api.qianwen.com/api/v1/session/get?biz_id=ai_qwen&chat_client=h5&device=pc&fr=pc&pr=qwen&ut={{ut}}&la=zh-CN&tz=UTC&wv=4.9.1&tq=SD&ve=4.9.1",
+      "method": "POST",
+      "body": "{\"session_id\":\"{{session_from_url}}\"}",
+      "headers": {
+        "Content-Type": "application/json",
+        "accept": "application/json, text/plain, */*",
+        "X-Platform": "pc_tongyi",
+        "x-device-id": "{{ut}}"
+      },
+      "path": "data.topic_id",
+      "optional": true,
+      "timeout_ms": 8000,
+      "scope": "request"
+    },
+    {
+      "name": "topic_new",
+      "producer": "fresh_blob",
+      "bytes": 24,
+      "scope": "request"
+    },
+    {
+      "name": "req_id",
+      "producer": "fresh_hex",
+      "length": 32,
+      "scope": "request"
+    },
+    {
+      "name": "parent_req_id",
+      "producer": "static",
+      "value": "0",
+      "scope": "request"
+    },
+    {
+      "name": "prompt",
+      "producer": "prompt",
+      "scope": "request"
+    }
+  ],
+  "response": {
+    "kind": "sse_data_json"
+  },
+  "metadata": {
+    "origin_note": "入口 www.tongyi.com 会重定向到 www.qianwen.com；match.origin 取实际站",
+    "channel": "qianwen-web",
+    "two_state": "两个分支都在 recipe 内：① session_from_url 命中(URL /chat/<32hex>) 且 session/get 回带 topic_id ⇒ continue_chat 续原会话；② 否则（新页 URL 无 ID / 服务端无该会话记录）⇒ 客户端自铸 session_new(32hex)+topic_new(24B base64url)、first_turn（§13 实测 200）",
+    "topic_id_source": "session/get 的 data.topic_id（2026-10-02 实测回带；页内 localStorage/全局无落点）",
+    "signer_note": "签名全部由页面自带 __QIANWEN_CHAT_SDK__.qwenSign 产出；ut/nonce/timestamp 由 signedUrl 自动补",
+    "purge": "§14 清账：POST https://chat2-api.qianwen.com/api/v1/session/delete/batch",
+    "guest_limit": "游客态按会话累计问答数（localStorage qianwen_guest_chat_limit_v1），自证轮次要省着用"
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "site": "gemini",
+  "status": "DRAFT",
+  "match": {
+    "origin": "https://gemini.google.com",
+    "path_re": "^/app"
+  },
+  "request": {
+    "method": "POST",
+    "url_template": "/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate?bl={{bl}}&f.sid={{fsid}}&hl=en&_reqid={{reqid}}&rt=c",
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      "X-Same-Domain": "1",
+      "x-goog-ext-73010989-jspb": "[0]",
+      "x-goog-ext-73010990-jspb": "[0,0,0]",
+      "x-goog-ext-525005358-jspb": "[\"{{uuid}}\",1]",
+      "x-goog-ext-525001261-jspb": "[1,null,null,null,\"56fdd199312815e2\",null,null,0,[4,5,6,8,16,4,5,6,8,16],null,null,2,null,null,1,1,\"{{uuid}}\",null,null,[[4,520500000],[1790854724,564000000]]]"
+    },
+    "body_template": "f.req={{f.req}}&at={{at}}",
+    "body_builders": {
+      "f.req": {
+        "kind": "json_outer",
+        "template": [
+          null,
+          {
+            "json_string": {
+              "sparse_array": {
+                "size": 99,
+                "set": {
+                  "0": ["{{prompt}}", 0, null, null, null, null, 0],
+                  "1": ["en"],
+                  "3": "{{blob}}",
+                  "4": "{{chex}}",
+                  "6": [1],
+                  "7": 1,
+                  "10": 1,
+                  "11": 0,
+                  "17": {"if_slot": "conv", "then": [[1]], "else": [[0]]},
+                  "18": 0,
+                  "27": 1,
+                  "30": [4, 16],
+                  "41": [1],
+                  "49": 0,
+                  "53": 0,
+                  "59": "{{uuid}}",
+                  "61": [],
+                  "67": 0,
+                  "68": 2,
+                  "71": {"if_slot": "conv", "then": ["{{conv}}", null, null, null, null, null, null, "{{cstate}}"], "else": null},
+                  "79": 1,
+                  "80": 1,
+                  "91": 0,
+                  "96": 0,
+                  "98": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "timeout_ms": 60000
+  },
+  "slots": [
+    {
+      "name": "at",
+      "producer": "page_global",
+      "path": "WIZ_global_data.SNlM0e",
+      "scope": "page_load"
+    },
+    {
+      "name": "fsid",
+      "producer": "page_global",
+      "path": "WIZ_global_data.FdrFJe",
+      "scope": "page_load"
+    },
+    {
+      "name": "bl",
+      "producer": "page_global",
+      "path": "WIZ_global_data.cfb2h",
+      "scope": "site_build"
+    },
+    {
+      "name": "reqid",
+      "producer": "counter",
+      "seed": "last_sent_reqid",
+      "step": 100000,
+      "scope": "page_load"
+    },
+    {
+      "name": "conv",
+      "producer": "from_url",
+      "re": "^/app/([0-9a-f]{16})",
+      "prefix": "c_",
+      "optional": true,
+      "scope": "conversation"
+    },
+    {
+      "name": "cstate",
+      "producer": "static",
+      "optional": true,
+      "scope": "conversation"
+    },
+    {
+      "name": "uuid",
+      "producer": "fresh_uuid",
+      "scope": "request"
+    },
+    {
+      "name": "chex",
+      "producer": "fresh_hex",
+      "length": 32,
+      "scope": "request"
+    },
+    {
+      "name": "blob",
+      "producer": "fresh_blob",
+      "prefix": "!",
+      "bytes": 1433,
+      "scope": "request"
+    },
+    {
+      "name": "prompt",
+      "producer": "prompt",
+      "scope": "request"
+    }
+  ],
+  "response": {
+    "kind": "ndjson_wrb_fr",
+    "frames": "verified"
+  },
+  "drift": {
+    "probe": "recipe_probe",
+    "triggers": ["on_failure", "scheduled"]
+  },
+  "metadata": {
+    "shape_source": "2026-10-01 真站抓包（首轮 1912B / 后续轮 2515B 两次）",
+    "inner_size": "99",
+    "conv_position": "index 71（首轮为 null；2026-09-26 案卷猜测的 index 2 已证伪）",
+    "open_questions": "index 17 按「首轮 0 / 有会话 1」二值化；index 71 第 8 位会话态串尚无可现取来源（cstate 暂缺）；blob 为客户端自造"
+  }
+}

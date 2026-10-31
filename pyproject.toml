@@ -1,0 +1,42 @@
+[project]
+name = "uws"
+version = "0.1.0"
+description = "Universal Web Surrogate：低成本、自进化、高确定性的浏览器自动化底座"
+requires-python = ">=3.10"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "pytest-asyncio>=0.23",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "grpcio>=1.62",
+  "grpcio-tools>=1.62",
+  "pyyaml>=6",
+  "zstandard>=0.22",
+  # ONNX Runtime：macOS 13 x86_64 从 1.24 起无 wheel，pin 1.23.0
+  # （官方 macosx_13_0_x86_64 cp311，2026-08-20 PyPI 实测）；其他平台用最新。
+  'onnxruntime==1.23.0; sys_platform == "darwin" and platform_machine == "x86_64"',
+  'onnxruntime>=1.18; sys_platform != "darwin" or platform_machine != "x86_64"',
+  # 训练链（仅 dev/CI 使用；运行时 dependencies=[] 保持零依赖）
+  "lightgbm>=4.3,<5",
+  "onnx>=1.15",
+  'numpy<2.4; sys_platform == "darwin" and platform_machine == "x86_64"',
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "benchmarks"]
+python_files = ["test_*.py", "*_test.py", "bench_*.py"]
+markers = [
+  "benchmark: 性能基准（TDD-PERF-* / TDD-ONNX-02）",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["pipeline", "learning", "coordinator"]
+omit = ["*/__init__.py", "tests/*"]
+
+[tool.coverage.report]
+fail_under = 80

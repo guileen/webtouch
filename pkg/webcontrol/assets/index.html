@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebTouch QA Studio & Streaming Viewer</title>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-card: #21262d;
+      --border-color: #30363d;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #1f6feb;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --magenta: #ff007f;
+      --purple: #bc8cff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+    }
+    .brand-badge {
+      font-size: 0.7rem;
+      background: var(--purple);
+      color: #000;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .dot.green { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot.red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+    .dot.yellow { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-card);
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .url-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .url-input {
+      flex: 1;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+    }
+    .url-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn.danger { background: var(--danger); }
+    .btn.secondary { background: var(--bg-card); border: 1px solid var(--border-color); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* QA Dashboard */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .verdict-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      width: fit-content;
+    }
+    .verdict-PASS { background: rgba(63, 185, 80, 0.15); color: var(--success); border: 1px solid var(--success); }
+    .verdict-WARNING { background: rgba(210, 153, 34, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+    .verdict-CRITICAL { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+    .verdict-FAIL { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+    .verdict-BLOCKED { background: rgba(248, 81, 73, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .verdict-NOT_RUN { background: rgba(139, 148, 158, 0.15); color: var(--text-muted); border: 1px solid var(--border); }
+    .verdict-NEEDS_EVIDENCE { background: rgba(210, 153, 34, 0.15); color: var(--warning); border: 1px solid var(--warning); }
+
+    /* Diff Slider */
+    .diff-container-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .diff-slider-wrapper {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #000;
+      border-radius: 6px;
+      overflow: hidden;
+      user-select: none;
+    }
+    .diff-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .diff-overlay {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 50%;
+      overflow: hidden;
+      border-right: 2px solid var(--magenta);
+      box-shadow: 2px 0 10px rgba(255, 0, 127, 0.5);
+    }
+    .diff-slider-handle {
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--magenta);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: ew-resize;
+      box-shadow: 0 0 12px rgba(255, 0, 127, 0.8);
+    }
+    .diff-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Bug Table */
+    .table-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .table-title {
+      padding: 12px 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Streaming Tab */
+    .stream-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+    .canvas-container {
+      background: #000;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    #viewerCanvas {
+      background: #111;
+      max-width: 100%;
+      max-height: 540px;
+      border-radius: 4px;
+      cursor: crosshair;
+    }
+    .challenge-alert {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(248, 81, 73, 0.9);
+      backdrop-filter: blur(8px);
+      padding: 14px 20px;
+      border-radius: 8px;
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    .stream-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .sidebar-panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .log-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      height: 180px;
+      overflow-y: auto;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-item { word-break: break-all; }
+    .log-item.in { color: var(--accent); }
+    .log-item.out { color: var(--success); }
+    .log-item.warn { color: var(--warning); }
+    .log-item.err { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span>⚡ WebTouch Studio</span>
+      <span class="brand-badge">Cloud Control</span>
+    </div>
+    <div class="status-bar">
+      <div class="status-item">
+        <div id="engineDot" class="dot green"></div>
+        <span>Engine: <b id="engineStatus">Ready</b></span>
+      </div>
+      <div class="status-item">
+        <div id="circuitDot" class="dot green"></div>
+        <span>Circuit: <b id="circuitStatus">CLOSED</b></span>
+      </div>
+      <div class="status-item">
+        <span style="color:var(--text-muted)">Sessions:</span>
+        <b id="activeSessionsCount">0</b>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('qaTab')">QA 验收看板</button>
+      <button class="tab-btn" onclick="switchTab('streamTab')">流式伴生视窗</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="url-bar">
+      <input type="text" id="targetUrl" class="url-input" placeholder="输入待验收目标网址 (例如: https://example.com)..." value="https://example.com">
+      <button class="btn" onclick="triggerQARun()">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+        并发视口走查
+      </button>
+      <button class="btn secondary" onclick="switchTab('streamTab')">
+        打开伴生小窗
+      </button>
+    </div>
+
+    <!-- TAB 1: QA Dashboard -->
+    <div id="qaTab" class="tab-content active">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">综合评级 (Verdict)</span>
+          <div>
+            <span id="verdictBadge" class="verdict-badge verdict-NOT_RUN">NOT RUN</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">健康度得分 (Health Score)</span>
+          <div class="metric-value" id="healthScore">--<span style="font-size:1rem;color:var(--text-muted)">/100</span></div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">走查视口数 (Audited Viewports)</span>
+          <div class="metric-value" id="viewportsCount">--</div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">总耗时 (Duration)</span>
+          <div class="metric-value" id="auditDuration">--<span style="font-size:1rem;color:var(--text-muted)">ms</span></div>
+        </div>
+      </div>
+
+      <!-- Figma-grade Visual Diff Interactive Slider -->
+      <div class="diff-container-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:1rem;font-weight:600;">Figma 级多视口差分比对 (Visual Diff Slider)</h3>
+          <div class="nav-tabs" style="font-size:0.75rem;">
+            <button class="tab-btn active" onclick="selectViewport('desktop')">Desktop 1440</button>
+            <button class="tab-btn" onclick="selectViewport('tablet')">Tablet 768</button>
+            <button class="tab-btn" onclick="selectViewport('mobile')">Mobile 375</button>
+          </div>
+        </div>
+        <div class="diff-slider-wrapper" id="diffWrapper">
+          <!-- Background: Actual / Diff with Magenta Highlight -->
+          <div class="diff-layer" id="diffLayerBg" style="background-image: linear-gradient(135deg, #1f2937 0%, #111827 100%);">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--magenta);font-weight:bold;font-size:1.5rem;opacity:0.8;">
+              [差分层: 洋红高亮变更区 (Magenta Diff)]
+            </div>
+          </div>
+          <!-- Overlay: Golden Reference Image -->
+          <div class="diff-overlay" id="diffOverlay">
+            <div class="diff-layer" id="diffLayerFg" style="width:1000px;background-image: linear-gradient(135deg, #0f172a 0%, #0284c7 100%);">
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:1.5rem;opacity:0.8;">
+                [基准层: 设计基准图 (Golden Reference)]
+              </div>
+            </div>
+            <div class="diff-slider-handle" id="sliderHandle">⇄</div>
+          </div>
+        </div>
+        <div class="diff-labels">
+          <span>◀ 拖动滑动条透视基准设计稿 (Golden Spec)</span>
+          <span>洋红高亮实际渲染差分 (Physical Diff) ▶</span>
+        </div>
+      </div>
+
+      <!-- Bug waterfall inspection table -->
+      <div class="table-box">
+        <div class="table-title">
+          <span>横向溢出暗病与触控缺陷瀑布流 (Defect Waterfall)</span>
+          <span style="font-size:0.8rem;color:var(--text-muted)">0 横向溢出 · 0 触控过小</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>类型</th>
+              <th>视口</th>
+              <th>DOM 节点 / 特征</th>
+              <th>尺寸 / 溢出量</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="defectTableBody">
+            <tr>
+              <td><span style="color:var(--success)">✓ 视口合规</span></td>
+              <td>Desktop (1440x900)</td>
+              <td><code>html &gt; body</code> (内宽 1440px / 滚动宽 1440px)</td>
+              <td>0px 溢出</td>
+              <td><span style="color:var(--success)">PASS</span></td>
+            </tr>
+            <tr>
+              <td><span style="color:var(--success)">✓ 触控热区</span></td>
+              <td>Mobile (375x812)</td>
+              <td><code>button.login-btn</code> (48x44px &ge; 32x32px)</td>
+              <td>符合移动端防误触</td>
+              <td><span style="color:var(--success)">PASS</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: Streaming Companion Viewer -->
+    <div id="streamTab" class="tab-content">
+      <div class="stream-layout">
+        <div class="canvas-container">
+          <!-- Challenge Breaker Alert Overlay -->
+          <div class="challenge-alert" id="challengeAlert">
+            <div>
+              <strong>🚨 人机挑战态已触发 (Challenge Intercepted)</strong>
+              <div id="challengeDetail" style="font-size:0.85rem;margin-top:2px;">
+                Cloudflare Turnstile 验证码拦截 · 熔断器已开路拒止盲目乱点
+              </div>
+            </div>
+            <button class="btn secondary" style="background:#fff;color:#000;font-size:0.8rem;" onclick="resetCircuit()">
+              人机验证已通过 · 解除熔断
+            </button>
+          </div>
+
+          <canvas id="viewerCanvas" width="800" height="500"></canvas>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">
+            提示: 点击画布向远程浏览器实时派发物理输入 · 支持真实因果逆向接管
+          </div>
+        </div>
+
+        <div class="stream-sidebar">
+          <div class="sidebar-panel">
+            <h4 style="font-size:0.9rem;font-weight:600;">人类逆向交互控制 (Human Input)</h4>
+            <div>
+              <label style="font-size:0.75rem;color:var(--text-muted)">远程文本输入 (Keyboard Input)</label>
+              <div style="display:flex;gap:6px;margin-top:4px;">
+                <input type="text" id="textInput" class="url-input" style="padding:6px 8px;font-size:0.85rem;" placeholder="发送文本...">
+                <button class="btn" style="padding:6px 12px;font-size:0.85rem;" onclick="sendInputText()">发送</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              <button class="btn secondary" style="flex:1;font-size:0.8rem;padding:6px;" onclick="sendKey('Enter')">↵ 回车 (Enter)</button>
+              <button class="btn secondary" style="flex:1;font-size:0.8rem;padding:6px;" onclick="sendKey('Escape')">Esc 取消</button>
+            </div>
+          </div>
+
+          <div class="sidebar-panel" style="flex:1;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <h4 style="font-size:0.9rem;font-weight:600;">伴生视窗时序日志 (Live Stream Log)</h4>
+              <button class="tab-btn" style="font-size:0.7rem;padding:2px 6px;" onclick="clearLogs()">清屏</button>
+            </div>
+            <div class="log-box" id="streamLogBox">
+              <div class="log-item in">[SYSTEM] 伴生流式视窗就绪，正在同步状态...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      const idx = tabId === 'qaTab' ? 0 : 1;
+      document.querySelectorAll('.nav-tabs .tab-btn')[idx].classList.add('active');
+    }
+
+    // Logging
+    function addLog(msg, type = 'in') {
+      const box = document.getElementById('streamLogBox');
+      const item = document.createElement('div');
+      item.className = 'log-item ' + type;
+      const time = new Date().toLocaleTimeString();
+      item.innerText = `[${time}] ${msg}`;
+      box.appendChild(item);
+      box.scrollTop = box.scrollHeight;
+    }
+    function clearLogs() {
+      document.getElementById('streamLogBox').innerHTML = '';
+    }
+
+    // Status polling
+    async function checkStatus() {
+      try {
+        const resp = await fetch('/api/status');
+        if (resp.ok) {
+          const data = await resp.json();
+          document.getElementById('engineStatus').innerText = data.engine_connected ? 'Connected' : 'Standalone';
+          document.getElementById('activeSessionsCount').innerText = data.active_sessions || 0;
+          
+          let hasOpenCircuit = false;
+          let openReason = '';
+          if (data.circuits && data.circuits.length > 0) {
+            for (const c of data.circuits) {
+              if (c.state === 'OPEN') {
+                hasOpenCircuit = true;
+                openReason = c.trip_reason || '挑战态拦截';
+                break;
+              }
+            }
+          }
+          const circuitDot = document.getElementById('circuitDot');
+          const circuitText = document.getElementById('circuitStatus');
+          const alertBox = document.getElementById('challengeAlert');
+          if (hasOpenCircuit) {
+            circuitDot.className = 'dot red';
+            circuitText.innerText = 'OPEN (熔断)';
+            alertBox.style.display = 'flex';
+            document.getElementById('challengeDetail').innerText = `${openReason} · 熔断器已开路拒止自动化乱点`;
+          } else {
+            circuitDot.className = 'dot green';
+            circuitText.innerText = 'CLOSED (正常)';
+            alertBox.style.display = 'none';
+          }
+        }
+      } catch (e) {
+        document.getElementById('engineDot').className = 'dot yellow';
+      }
+    }
+    setInterval(checkStatus, 2500);
+    checkStatus();
+
+    // Reset circuit breaker
+    async function resetCircuit() {
+      try {
+        const resp = await fetch('/api/circuits/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ circuit_id: "" })
+        });
+        if (resp.ok) {
+          addLog('熔断器已由人工复位 (Circuit Breaker RESET)', 'out');
+          checkStatus();
+        }
+      } catch (e) {
+        addLog(`复位失败: ${e}`, 'err');
+      }
+    }
+
+    // Trigger QA run
+    async function triggerQARun() {
+      const url = document.getElementById('targetUrl').value;
+      addLog(`发起多视口自动化走查: ${url}`, 'in');
+      try {
+        const resp = await fetch('/api/qa/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+        if (resp.ok) {
+          const rep = await resp.json();
+          document.getElementById('healthScore').innerHTML = `${rep.health_score}<span style="font-size:1rem;color:var(--text-muted)">/100</span>`;
+          const badge = document.getElementById('verdictBadge');
+          badge.className = `verdict-badge verdict-${rep.verdict}`;
+          badge.innerText = rep.verdict;
+          document.getElementById('auditDuration').innerHTML = `${rep.duration_ms || 380}<span style="font-size:1rem;color:var(--text-muted)">ms</span>`;
+          addLog(`走查完成! 评级=${rep.verdict}, 得分=${rep.health_score}`, 'out');
+        } else {
+          let errPayload = null;
+          try { errPayload = await resp.json(); } catch (_) {}
+          const badge = document.getElementById('verdictBadge');
+          const verdict = (errPayload && errPayload.verdict) ? errPayload.verdict : 'BLOCKED';
+          badge.className = `verdict-badge verdict-${verdict}`;
+          badge.innerText = verdict;
+          document.getElementById('healthScore').innerHTML = `--<span style="font-size:1rem;color:var(--text-muted)">/100</span>`;
+          document.getElementById('auditDuration').innerHTML = `--<span style="font-size:1rem;color:var(--text-muted)">ms</span>`;
+          const reason = (errPayload && errPayload.error) ? errPayload.error : (errPayload && errPayload.reason_code) ? errPayload.reason_code : `HTTP ${resp.status}`;
+          addLog(`QA走查受阻 [${verdict}]: ${reason}`, 'err');
+        }
+      } catch (e) {
+        const badge = document.getElementById('verdictBadge');
+        badge.className = 'verdict-badge verdict-BLOCKED';
+        badge.innerText = 'BLOCKED';
+        document.getElementById('healthScore').innerHTML = `--<span style="font-size:1rem;color:var(--text-muted)">/100</span>`;
+        document.getElementById('auditDuration').innerHTML = `--<span style="font-size:1rem;color:var(--text-muted)">ms</span>`;
+        addLog(`QA走查网络异常: ${e}`, 'err');
+      }
+    }
+
+    // Visual Diff Slider Logic
+    const diffWrapper = document.getElementById('diffWrapper');
+    const diffOverlay = document.getElementById('diffOverlay');
+    let isDragging = false;
+
+    function updateSlider(clientX) {
+      const rect = diffWrapper.getBoundingClientRect();
+      let offsetX = clientX - rect.left;
+      if (offsetX < 0) offsetX = 0;
+      if (offsetX > rect.width) offsetX = rect.width;
+      const pct = (offsetX / rect.width) * 100;
+      diffOverlay.style.width = pct + '%';
+    }
+
+    diffWrapper.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      updateSlider(e.clientX);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      updateSlider(e.clientX);
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Canvas Streaming & Human Input Forwarding
+    const canvas = document.getElementById('viewerCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Draw initial test pattern
+    function drawPlaceholder() {
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+      ctx.fillStyle = '#58a6ff';
+      ctx.font = '16px -apple-system, sans-serif';
+      ctx.fillText('WebTouch 伴生流式画布 (WebSocket Stream)', 30, 45);
+
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '14px -apple-system, sans-serif';
+      ctx.fillText('等待远程浏览器推送帧...', 30, 80);
+      ctx.fillText('在画布上任意位置点击，将实时派发物理鼠标点击。', 30, 110);
+    }
+    drawPlaceholder();
+
+    // Canvas Click Dispatcher
+    canvas.addEventListener('click', async (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = Math.round((e.clientX - rect.left) * scaleX);
+      const y = Math.round((e.clientY - rect.top) * scaleY);
+
+      // Draw touch ripple
+      ctx.strokeStyle = '#ff007f';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      addLog(`派发人工点击: (${x}, ${y})`, 'out');
+
+      try {
+        await fetch('/api/viewer/input', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'click', x: x, y: y })
+        });
+      } catch (err) {
+        addLog(`点击发送异常: ${err}`, 'err');
+      }
+    });
+
+    // Keyboard Input Dispatcher
+    async function sendInputText() {
+      const input = document.getElementById('textInput');
+      const val = input.value;
+      if (!val) return;
+      addLog(`发送文本: "${val}"`, 'out');
+      try {
+        await fetch('/api/viewer/input', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'input', text: val })
+        });
+        input.value = '';
+      } catch (err) {
+        addLog(`文本发送异常: ${err}`, 'err');
+      }
+    }
+
+    async function sendKey(key) {
+      addLog(`发送按键: [${key}]`, 'out');
+      try {
+        await fetch('/api/viewer/input', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'key', key: key })
+        });
+      } catch (err) {
+        addLog(`按键发送异常: ${err}`, 'err');
+      }
+    }
+
+    // WebSocket Stream Connection
+    let ws = null;
+    function connectWS() {
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${proto}//${window.location.host}/api/viewer/stream`;
+      ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        addLog('WebSocket 伴生流已建立', 'in');
+      };
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'frame' && msg.data) {
+            const img = new Image();
+            img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); };
+            img.src = 'data:image/png;base64,' + msg.data;
+          } else if (msg.type === 'circuit') {
+            checkStatus();
+          }
+        } catch (e) {
+          // ignore non-json frames
+        }
+      };
+      ws.onclose = () => {
+        setTimeout(connectWS, 3000);
+      };
+    }
+    connectWS();
+  </script>
+</body>
+</html>

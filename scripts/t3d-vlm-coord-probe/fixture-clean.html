@@ -1,0 +1,66 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>vlm coord probe</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:#101418}canvas{display:block}#n{display:none}</style>
+</head><body>
+<canvas id="cv"></canvas><div id="n" aria-hidden="true"></div>
+<script>
+const NAMES = ["ALPHA","BRAVO","CHARLIE","DELTA","ECHO"];
+const POS = [[0.15,0.15],[0.85,0.15],[0.50,0.50],[0.15,0.85],[0.85,0.85]];
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+window.__probe = { drawn: [], events: [] };
+function liveTargets(){
+  const w = innerWidth, h = innerHeight, s = Math.min(w,h);
+  const bw = Math.round(s*0.24), bh = Math.round(s*0.10);
+  return NAMES.map((name,i)=>({name, cx: Math.round(POS[i][0]*w), cy: Math.round(POS[i][1]*h), w: bw, h: bh}));
+}
+function layout(){
+  const w = innerWidth, h = innerHeight, dpr = devicePixelRatio;
+  cv.style.width = w+'px'; cv.style.height = h+'px';
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = '#101418'; ctx.fillRect(0,0,w,h);
+  const t = liveTargets();
+  for (const o of t){
+    ctx.fillStyle = '#f5c542'; ctx.fillRect(o.cx-o.w/2, o.cy-o.h/2, o.w, o.h);
+    ctx.fillStyle = '#101418';
+    ctx.font = 'bold '+Math.round(o.h*0.42)+'px Helvetica, Arial, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(o.name, o.cx, o.cy);
+  }
+  window.__probe.drawn = t;
+}
+function metrics(){
+  const c = document.getElementById('cv');
+  return { innerW: innerWidth, innerH: innerHeight, dpr: devicePixelRatio,
+    vvW: visualViewport?visualViewport.width:null, vvH: visualViewport?visualViewport.height:null,
+    vvScale: visualViewport?visualViewport.scale:null,
+    vvOffX: visualViewport?visualViewport.offsetLeft:null, vvOffY: visualViewport?visualViewport.offsetTop:null,
+    sx: scrollX, sy: scrollY,
+    cvCssW: c.clientWidth, cvCssH: c.clientHeight, cvW: c.width, cvH: c.height,
+    drawn: window.__probe.drawn, live: liveTargets() };
+}
+function beacon(kind, extra){
+  const m = metrics();
+  const q = new URLSearchParams();
+  q.set('kind', kind); q.set('m', JSON.stringify(m));
+  for (const k in extra) q.set(k, String(extra[k]));
+  new Image().src = '/__probe?' + q.toString() + '&r=' + Math.random();
+}
+for (const t of ['pointerdown','mousedown','mouseup','click']){
+  addEventListener(t, function(e){
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const ev = { type: t, clientX: e.clientX, clientY: e.clientY, pageX: e.pageX, pageY: e.pageY,
+      offsetX: e.offsetX, offsetY: e.offsetY, at: Math.round(performance.now()),
+      topEl: el ? (el.tagName + (el.id ? '#'+el.id : '')) : null };
+    window.__probe.events.push(ev);
+    beacon('event', { type: t, cx: e.clientX, cy: e.clientY, ox: e.offsetX, oy: e.offsetY, topEl: ev.topEl });
+  }, true);
+}
+addEventListener('resize', layout);
+layout();
+addEventListener('load', function(){ beacon('load', {}); });
+beacon('ready', {});
+window.__ready = true;
+</script>
+</body></html>

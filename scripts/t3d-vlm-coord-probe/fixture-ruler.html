@@ -1,0 +1,78 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>vlm coord probe 4</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:#f3f4f6}</style>
+</head><body>
+<canvas id="cv"></canvas>
+<script>
+const SPEC = [
+  { name: "RENAME",  fx: 0.62, fy: 0.72, w: 72, h: 22 },
+  { name: "EXPORT",  fx: 0.62, fy: 0.80, w: 72, h: 22 }
+];
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+window.__probe = { drawn: [], events: [] };
+function liveTargets(){
+  const w = innerWidth, h = innerHeight;
+  return SPEC.map(o => ({ name: o.name, cx: Math.round(o.fx*w), cy: Math.round(o.fy*h), w: o.w, h: o.h }));
+}
+function layout(){
+  const w = innerWidth, h = innerHeight, dpr = devicePixelRatio;
+  cv.style.width = w+'px'; cv.style.height = h+'px';
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = '#f3f4f6'; ctx.fillRect(0,0,w,h);
+  // 噪声：大量灰色文字行，模拟真实页面的视觉杂波
+  ctx.fillStyle = '#9aa3ad'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < 44; i++){
+    const y = 24 + (i % 22) * 36, x = (i < 22 ? 40 : w/2 + 40);
+    ctx.font = (i % 3 === 0 ? 'bold ' : '') + (13 + (i % 3)) + 'px Helvetica, Arial, sans-serif';
+    ctx.fillText('Account preference section ' + (i+1) + ' — updated 2026-09-30 by ops', x, y);
+  }
+  // 目标：两个小按钮
+  for (const o of liveTargets()){
+    ctx.fillStyle = '#2563eb'; ctx.fillRect(o.cx-o.w/2, o.cy-o.h/2, o.w, o.h);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
+    ctx.textAlign='center'; ctx.fillText(o.name, o.cx, o.cy);
+  }
+
+  // 边缘百分刻度（实验叠加层）
+  ctx.save();
+  ctx.strokeStyle = 'rgba(220,38,38,0.9)'; ctx.fillStyle = 'rgba(185,28,28,0.95)';
+  ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
+  for (let i = 0; i <= 10; i++){
+    const x = Math.round(i*w/10), y = Math.round(i*h/10);
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 14); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(i*10 + '%', Math.min(Math.max(x, 20), w-22), 17);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(14, y); ctx.stroke();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(i*10 + '%', 17, Math.min(Math.max(y, 8), h-8));
+  }
+  ctx.restore();
+  window.__probe.drawn = liveTargets();
+}
+function metrics(){
+  const c = document.getElementById('cv');
+  return { innerW: innerWidth, innerH: innerHeight, dpr: devicePixelRatio,
+    cvW: c.width, cvH: c.height, cvCssW: c.clientWidth, cvCssH: c.clientHeight,
+    drawn: window.__probe.drawn, live: liveTargets() };
+}
+function beacon(kind, extra){
+  const q = new URLSearchParams();
+  q.set('kind', kind); q.set('m', JSON.stringify(metrics()));
+  for (const k in extra) q.set(k, String(extra[k]));
+  new Image().src = '/__probe?' + q.toString() + '&r=' + Math.random();
+}
+for (const t of ['mousedown','mouseup','click']){
+  addEventListener(t, function(e){
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    beacon('event', { type: t, cx: e.clientX, cy: e.clientY, ox: e.offsetX, oy: e.offsetY,
+      topEl: el ? (el.tagName + (el.id ? '#'+el.id : '')) : '' });
+  }, true);
+}
+addEventListener('resize', layout);
+layout();
+beacon('ready', {});
+window.__ready = true;
+</script>
+</body></html>

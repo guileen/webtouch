@@ -1,0 +1,111 @@
+{
+  "site": "deepseek",
+  "status": "DRAFT",
+  "match": {
+    "origin": "https://chat.deepseek.com",
+    "path_re": "^/"
+  },
+  "request": {
+    "method": "POST",
+    "url_template": "/api/v0/chat/completion",
+    "headers": {
+      "Content-Type": "application/json",
+      "accept": "*/*",
+      "authorization": "Bearer {{authorization}}",
+      "x-device-id": "{{device_id}}",
+      "x-hif-dliq": "{{hif_dliq}}",
+      "x-hif-leim": "{{hif_leim}}",
+      "x-ds-pow-response": "{{pow_response}}",
+      "x-client-version": "2.5.0",
+      "x-client-platform": "web",
+      "x-client-bundle-id": "com.deepseek.chat",
+      "x-client-locale": "zh_CN",
+      "x-client-timezone-offset": "0"
+    },
+    "body_builders": {
+      "body": {
+        "kind": "json_object",
+        "template": {
+          "chat_session_id": "{{chat_session_id}}",
+          "parent_message_id": null,
+          "model_type": null,
+          "prompt": "{{prompt}}",
+          "ref_file_ids": [],
+          "thinking_enabled": false,
+          "search_enabled": true,
+          "action": null,
+          "preempt": false
+        }
+      }
+    },
+    "timeout_ms": 60000
+  },
+  "slots": [
+    {
+      "name": "authorization",
+      "producer": "local_storage",
+      "key": "userToken",
+      "decode": "json",
+      "path": "value",
+      "scope": "page_load"
+    },
+    {
+      "name": "device_id",
+      "producer": "local_storage",
+      "key": "deepseek-device-id:chat",
+      "decode": "json",
+      "scope": "page_load"
+    },
+    {
+      "name": "hif_dliq",
+      "producer": "local_storage",
+      "key": "hif_dliq_cached",
+      "decode": "json",
+      "optional": true,
+      "scope": "page_load"
+    },
+    {
+      "name": "hif_leim",
+      "producer": "local_storage",
+      "key": "hif_leim_cached",
+      "decode": "json",
+      "optional": true,
+      "scope": "page_load"
+    },
+    {
+      "name": "chat_session_id",
+      "producer": "session_mint",
+      "re": "^/a/chat/s/([0-9a-fA-F-]{36})",
+      "endpoint": "/api/v0/chat_session/create",
+      "echo": true,
+      "scope": "conversation"
+    },
+    {
+      "name": "prompt",
+      "producer": "prompt",
+      "scope": "request"
+    },
+    {
+      "name": "pow_response",
+      "producer": "pow_challenge",
+      "endpoint": "/api/v0/chat/create_pow_challenge",
+      "target_path": "/api/v0/chat/completion",
+      "algorithm": "DeepSeekHashV1",
+      "chunk": "https://fe-static.deepseek.com/chat/static/37627.ebf6d8f55d.js",
+      "challenge_path": "data.biz_data.challenge",
+      "timeout_ms": 30000,
+      "scope": "request"
+    }
+  ],
+  "response": {
+    "kind": "sse_data_json",
+    "frames": "unverified"
+  },
+  "drift": {
+    "probe": "recipe_probe",
+    "triggers": [
+      "on_failure",
+      "scheduled"
+    ]
+  }
+}

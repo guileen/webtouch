@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://webtouch.local/spec/wstn-routing-v1.schema.json",
+  "title": "WebTouch WSTN routing contract v1",
+  "oneOf": [
+    { "$ref": "#/$defs/route_request" },
+    { "$ref": "#/$defs/route_result" }
+  ],
+  "$defs": {
+    "route_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_type",
+        "schema_version",
+        "current_state_id",
+        "target_state_id",
+        "target_intent",
+        "limits",
+        "extensions"
+      ],
+      "properties": {
+        "message_type": { "const": "route_request" },
+        "schema_version": { "const": "wstn.route.v1" },
+        "current_state_id": { "type": "string", "minLength": 1 },
+        "target_state_id": { "type": "string", "minLength": 1 },
+        "target_intent": { "type": "string" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start_k", "branch_k", "max_hops"],
+          "properties": {
+            "start_k": { "type": "integer", "minimum": 1, "default": 3 },
+            "branch_k": { "type": "integer", "minimum": 1, "default": 6 },
+            "max_hops": { "type": "integer", "minimum": 1, "default": 5 }
+          }
+        },
+        "extensions": { "type": "object" }
+      },
+      "examples": [
+        {
+          "message_type": "route_request",
+          "schema_version": "wstn.route.v1",
+          "current_state_id": "checkout.cart",
+          "target_state_id": "checkout.complete",
+          "target_intent": "完成结账",
+          "limits": { "start_k": 3, "branch_k": 6, "max_hops": 5 },
+          "extensions": {}
+        }
+      ]
+    },
+    "route_action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target_semantic", "source_state", "target_state"],
+      "properties": {
+        "type": { "enum": ["click", "input", "select", "scroll"] },
+        "target_semantic": { "type": "string", "minLength": 1 },
+        "source_state": { "type": "string", "minLength": 1 },
+        "target_state": { "type": "string", "minLength": 1 }
+      }
+    },
+    "route_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_type",
+        "schema_version",
+        "status",
+        "state_path",
+        "actions",
+        "confidence",
+        "potential",
+        "hops",
+        "expanded_states",
+        "decisive_edge_indexes",
+        "selection_mode",
+        "reason",
+        "extensions"
+      ],
+      "properties": {
+        "message_type": { "const": "route_result" },
+        "schema_version": { "const": "wstn.route.v1" },
+        "status": { "enum": ["FOUND", "FALLBACK"] },
+        "state_path": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/route_action" }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "potential": { "type": ["number", "null"] },
+        "hops": { "type": "integer", "minimum": 0 },
+        "expanded_states": { "type": "integer", "minimum": 0 },
+        "decisive_edge_indexes": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 },
+          "uniqueItems": true
+        },
+        "selection_mode": { "enum": ["rank", "sample"] },
+        "reason": { "type": "string" },
+        "extensions": { "type": "object" }
+      },
+      "examples": [
+        {
+          "message_type": "route_result",
+          "schema_version": "wstn.route.v1",
+          "status": "FOUND",
+          "state_path": ["checkout.cart", "checkout.review", "checkout.complete"],
+          "actions": [
+            {
+              "type": "click",
+              "target_semantic": "继续结账",
+              "source_state": "checkout.cart",
+              "target_state": "checkout.review"
+            },
+            {
+              "type": "click",
+              "target_semantic": "提交订单",
+              "source_state": "checkout.review",
+              "target_state": "checkout.complete"
+            }
+          ],
+          "confidence": 0.91,
+          "potential": 0.42,
+          "hops": 2,
+          "expanded_states": 4,
+          "decisive_edge_indexes": [0],
+          "selection_mode": "rank",
+          "reason": "",
+          "extensions": {}
+        }
+      ]
+    }
+  }
+}

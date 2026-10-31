@@ -1,0 +1,190 @@
+{
+  "site": "chatgpt",
+  "status": "DRAFT",
+  "match": {
+    "origin": "https://chatgpt.com",
+    "path_re": "^/"
+  },
+  "request": {
+    "method": "POST",
+    "url_template": "https://chatgpt.com/backend-api/f/conversation",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "text/event-stream",
+      "OAI-Language": "zh-CN",
+      "Authorization": "Bearer {{access_token}}",
+      "oai-device-id": "{{device_id}}",
+      "OpenAI-Sentinel-Chat-Requirements-Token": "{{sentinel}}"
+    },
+    "body_builders": {
+      "body": {
+        "kind": "json_object",
+        "template": {
+          "action": "next",
+          "messages": [
+            {
+              "id": "{{message_id}}",
+              "author": {
+                "role": "user",
+                "name": null,
+                "metadata": {}
+              },
+              "create_time": "{{create_time}}",
+              "update_time": null,
+              "content": {
+                "content_type": "text",
+                "parts": [
+                  "{{prompt}}"
+                ]
+              },
+              "metadata": {},
+              "channel": null,
+              "recipient": "all",
+              "status": "finished_successfully",
+              "end_turn": null,
+              "weight": 1
+            }
+          ],
+          "parent_message_id": "{{parent_message_id}}",
+          "conversation_id": {
+            "omit_if_empty": "conversation_id"
+          },
+          "model": "{{model}}",
+          "timezone": "Asia/Shanghai",
+          "timezone_offset_min": -480,
+          "is_do_not_remember": false,
+          "supported_encodings": [
+            "v1"
+          ],
+          "turn_attribution": {
+            "turn_trigger": "composer"
+          },
+          "client_contextual_info": {
+            "app_name": "chatgpt.com",
+            "app_surface": "codex_browser",
+            "has_web_push_capabilities": true,
+            "web_push_notification_permission": "default"
+          },
+          "local_function_names": [
+            "local.continue_in_work"
+          ],
+          "browser_context": {
+            "instance_id": "{{instance_id}}"
+          },
+          "client_prepare_state": "success"
+        }
+      }
+    },
+    "timeout_ms": 120000
+  },
+  "slots": [
+    {
+      "name": "access_token",
+      "producer": "fetch_field",
+      "endpoint": "https://chatgpt.com/api/auth/session",
+      "method": "GET",
+      "path": "accessToken",
+      "scope": "page_load",
+      "timeout_ms": 8000
+    },
+    {
+      "name": "device_id",
+      "producer": "cookie",
+      "key": "oai-did",
+      "optional": true,
+      "scope": "page_load"
+    },
+    {
+      "name": "prepare_token",
+      "producer": "fetch_field",
+      "endpoint": "https://chatgpt.com/backend-api/sentinel/chat-requirements/prepare",
+      "method": "POST",
+      "body": "{}",
+      "path": "prepare_token",
+      "scope": "request",
+      "timeout_ms": 8000
+    },
+    {
+      "name": "sentinel",
+      "producer": "fetch_field",
+      "endpoint": "https://chatgpt.com/backend-api/sentinel/chat-requirements/finalize",
+      "method": "POST",
+      "body": "{\"prepare_token\":\"{{prepare_token}}\"}",
+      "path": "token",
+      "scope": "request",
+      "timeout_ms": 8000
+    },
+    {
+      "name": "conversation_id",
+      "producer": "from_url",
+      "re": "^/c/([0-9a-fA-F-]{36})",
+      "optional": true,
+      "scope": "conversation",
+      "echo": true
+    },
+    {
+      "name": "parent_message_id",
+      "producer": "fetch_field",
+      "endpoint": "https://chatgpt.com/backend-api/conversation/{{conversation_id}}",
+      "method": "GET",
+      "select": "last_assistant_message_id",
+      "fallback": "client-created-root",
+      "optional": true,
+      "scope": "request",
+      "timeout_ms": 8000
+    },
+    {
+      "name": "message_id",
+      "producer": "fresh_uuid",
+      "scope": "request"
+    },
+    {
+      "name": "instance_id",
+      "producer": "fresh_uuid",
+      "scope": "request"
+    },
+    {
+      "name": "create_time",
+      "producer": "now_epoch",
+      "scope": "request"
+    },
+    {
+      "name": "prompt",
+      "producer": "prompt",
+      "scope": "request"
+    },
+    {
+      "name": "model",
+      "producer": "model",
+      "fallback": "gpt-6-pro",
+      "scope": "request"
+    }
+  ],
+  "response": {
+    "kind": "sse_handoff_poll",
+    "frames": "verified",
+    "poll": {
+      "url_template": "https://chatgpt.com/backend-api/conversation/{{conversation_id}}",
+      "conversation_id_re": "\"conversation_id\":\"([0-9a-fA-F-]{36})\"",
+      "select": "last_assistant_text",
+      "interval_ms": 1500,
+      "timeout_ms": 90000
+    }
+  },
+  "drift": {
+    "probe": "recipe_probe",
+    "triggers": [
+      "on_failure",
+      "scheduled"
+    ]
+  },
+  "metadata": {
+    "channel": "chatgpt-web",
+    "two_state": "一条分支：① 首轮（页地址非 /c/<uuid>）⇒ conversation_id 槽位为空、body **整键不落**（omit_if_empty，实测首轮无该字段、不是空串）、parent_message_id=client-created-root；② 续轮（页地址 /c/<uuid>）⇒ 带 conversation_id、parent_message_id=上一轮助手消息 id（从会话对象 mapping 里按 create_time 取最新助手消息，**不取 prepare 带回的 id**，实测二者不一致）。",
+    "sentinel": "chat-requirements 两步：prepare（可空体）⇒ prepare_token；finalize{prepare_token} ⇒ token，写进头 OpenAI-Sentinel-Chat-Requirements-Token。全程页内 fetch，凭据不落 recipe 文本。",
+    "answer_route": "**答案正文不在主请求 SSE 里**（实测 8 帧块止于 stream_handoff＋metadata＋[DONE]）；站点随后走 WebSocket conduit 按 conversation-turn-<turn_id> 投递正文。本 recipe 不订阅该 WS，改为按 response.poll 轮询会话对象取最后一条助手消息正文（且必须 ≠ 本轮 parent_message_id，防把上一轮答案当结果）。",
+    "purge": "§14 清账：DELETE https://chatgpt.com/backend-api/conversation/id/<uuid36>（无 body，路径多一段 id/）；抓取须用 Fetch 域（页面级 Network 抓不到）。",
+    "model_slugs": "站点 /backend-api/models 目录读数（2026-10-02，未发车实测）：目录含 gpt-6-pro（＝选择器「最新」实测 wire 值，GPT-6 Pro）/ gpt-5-6（GPT-5.6 Sol）/ gpt-5-5（GPT-5.5）/ gpt-5-6-pro / gpt-5-5-pro / gpt-5-6-thinking / research（Deep Research）等；本 recipe 默认 fallback=gpt-6-pro。",
+    "unverified": "① 第 9 条真机自证回放未跑（本轮只落模板与执行器）；② `/backend-api/f/conversation/prepare`（站点第 2 步，带 partial_query）与 `POST /backend-api/conversation/init`（第 5 步）未接 —— 主请求 body 里的 client_prepare_state=success 是否要求前置 prepare 未验证；③ browser_context.instance_id 用每次请求新铸 UUID（站点实际是**页内稳定 UUID**，是否被服务端校验未实测）；④ 思考强度滑杆与 wire model 的映射未坐实；⑤ 单轮额度仅剩 2%（2026-10-04 01:16 重置）。"
+  }
+}

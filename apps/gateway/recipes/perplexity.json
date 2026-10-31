@@ -1,0 +1,35 @@
+{
+  "site": "perplexity",
+  "status": "DRAFT",
+  "match": {
+    "origin": "https://www.perplexity.ai",
+    "path_re": "^/"
+  },
+  "request": {
+    "method": "POST",
+    "url_template": "/rest/thread/create",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body_template": "{\"query\":\"{{prompt}}\",\"mode\":\"copilot\",\"search_focus\":\"internet\",\"stream\":true}",
+    "timeout_ms": 60000
+  },
+  "slots": [
+    {
+      "name": "prompt",
+      "producer": "prompt",
+      "scope": "request"
+    }
+  ],
+  "response": {
+    "kind": "sse_data_json",
+    "frames": "verified"
+  },
+  "drift": {
+    "probe": "recipe_probe",
+    "triggers": [
+      "on_failure",
+      "scheduled"
+    ]
+  }
+}

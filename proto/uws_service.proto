@@ -1,0 +1,379 @@
+// UWS (Universal Web Surrogate) — 统一 gRPC 接口定义
+// 版本：v1.5.5（v1.5.0 追加-only 演进）
+// 变更记录：
+//   v1.5.5（2026-08-27）：ActionIntentRequest 追加 optional int32 node_id=7
+//     （混合指挥确定性引用：探针 BFS 输入序编号，node_id>0 时跳过语义/选择器
+//     派发，执行层按同一 BFS 序回查定位器确定性执行）+ 新增 ExportPageTree RPC
+//     （导出极简 AXTree，供协调器 commander / uws run --plan 外发 VLM 指挥官）。
+//     仅追加字段/新 RPC，不改既有字段语义（见 GLOBAL §5 #57 / architecture §2.2）。
+//   v1.5.4（2026-08-27）：ActionResultResponse 追加 HitElement hit_element=10 /
+//     page_url=11 / url_changed=12 —— 判定层证据链第一切片
+//     （docs/evidence/research/uws-verdict-evidence-design-2026-08-27.md §6.1）：
+//     回显实际命中元素（selector/rect/text），并给「动作前后 URL 是否变化」的
+//     确定性证据，让调用方识破「点击命中容器却报成功」假阳性（drama-h5 /
+//     skincare 复测实证）。仅追加，不改既有字段语义。
+//   v1.5.3（2026-08-25）：InitContextRequest 追加 optional string context_name=9
+//     （同一客户端可持有多个命名上下文=多个浏览器标签页，多会话并行；
+//      ExecuteAction 经 context_hint["context"]=<context_name> 路由，缺省
+//      保持「每客户端单上下文、重复初始化替换」旧语义）+ 新增 CloseContext
+//     RPC（关闭/释放命名上下文对应的标签页，DELETE /v1/sessions 用）。
+//   v1.5.2（2026-08-25）：ActionResultResponse 追加 optional bool chat_stream_done=9
+//     （extract prefer_sse 时带出 SSE 流结束状态，API 完成判定用）。
+//   v1.5.1（2026-08-20）：新增 CaptureScreenshot RPC（VLM 视觉打码求解输入）
+//     + ExecuteAction expected_action 追加 drag 值（value="x1,y1,x2,y2" 原生拖拽，
+//     USER_ACTION.md #9 引擎侧原语）。仅追加 RPC/消息/动作值，不改既有字段语义。
+//   v1.5.0（2026-08-20）：HealthStatus 追加 rolled_back / rollback_reason
+//     （knowledge-versioning.md §5.2 要求 HealthCheck 附带回滚标记，v1.4.0 缺此字段）。
+//     仅追加新 tag，不改动 v1.4.0 既有字段语义。
+//   v1.4.0（2026-08-19）：合并自 algorithm-kernel §7.1 + physical-patches §2.1/2.2 +
+//     knowledge-versioning §3.3；冻结，单一事实源。
+// 状态：追加-only（禁止修改既有字段 tag/类型/语义）
+// 生效日期：2026-08-27（v1.5.5）
+
+syntax = "proto3";
+package uws.v1;
+
+option go_package = "uws/proto/v1;uwspb";
+
+// ═══════════════════════════════════════════════════════════════════
+// Service Definition
+// ═══════════════════════════════════════════════════════════════════
+
+service UwsEngine {
+    // 初始化浏览器沙盒上下文（必须在 ExecuteAction 之前调用）
+    // 每个外部任务分配独立 BrowserContext（等同于隐身窗口），
+    // 物理上阻断 Cookie/LocalStorage/SessionStorage 交叉污染。
+    rpc InitializeContext(InitContextRequest) returns (InitContextResponse);
+
+    // 单步原子动作（推荐无状态协调器使用）
+    // 幂等性：相同 intent_id 在 60s TTL 内返回缓存结果。
+    rpc ExecuteAction(ActionIntentRequest) returns (ActionResultResponse);
+
+    // 双向流式控制（推荐高阶 AGI Planner 使用，保持 Session 复用）
+    rpc ExecuteActionStream(stream ActionIntentRequest) returns (stream ActionResultResponse);
+
+    // 强制知识库原子重载（零停机热更，双缓冲切换）
+    rpc ReloadKnowledge(ReloadRequest) returns (ReloadResponse);
+
+    // 物理层与内核层双重健康检查
+    rpc HealthCheck(Empty) returns (HealthStatus);
+
+    // 查询当前知识库版本
+    rpc GetKnowledgeVersion(Empty) returns (KnowledgeVersionResponse);
+
+    // 捕获当前页面截图（PNG 字节），VLM 视觉打码求解输入。
+    // ★v1.5.1 新增（USER_ACTION.md #9）：追加-only。
+    rpc CaptureScreenshot(CaptureScreenshotRequest) returns (CaptureScreenshotResponse);
+
+    // 导出当前页面极简 AXTree（ExportToVLMFormat 文本），供协调器外发 VLM 指挥官
+    // 做混合指挥（node_id 确定性引用）。★v1.5.5 新增：追加-only。
+    rpc ExportPageTree(ExportPageTreeRequest) returns (ExportPageTreeResponse);
+
+    // ★v1.5.3 新增：关闭命名上下文（释放 Target，标签页随之关闭）。
+    // API 层 DELETE /v1/sessions/{id} 消费；幂等（重复关闭返回 ok）。
+    rpc CloseContext(CloseContextRequest) returns (CloseContextResponse);
+
+    // ★v1.5.6 新增：导出当前浏览器上下文状态（Cookies、LocalStorage、当前 tab 的 SessionStorage）。
+    rpc ExportState(ExportStateRequest) returns (ExportStateResponse);
+
+    // ★v1.5.7 新增：在首个页面导航前恢复 State Bundle（Cookie + LocalStorage + 当前 tab 的 SessionStorage）。
+    rpc ImportState(ImportStateRequest) returns (ImportStateResponse);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// InitializeContext — 浏览器沙盒初始化
+// ═══════════════════════════════════════════════════════════════════
+
+message InitContextRequest {
+    string task_id = 1;                     // 协调器侧任务ID，用于关联日志（UUIDv7）
+
+    // 四元组沙盒隔离（Physical Execution §2 强制要求）
+    ProxyConfig proxy = 2;                  // 可选，不填使用默认出口
+    ViewportConfig viewport = 3;            // 视口尺寸，默认 1920x1080
+    repeated Cookie cookies = 4;            // 预置 Cookie（用于保持会话）
+    string timezone = 5;                    // 时区，如 "Asia/Shanghai"
+
+    // 可选：浏览器启动参数覆盖
+    BrowserLaunchOverrides launch_overrides = 6;
+
+    // 可选：初始导航 URL（Playwright 适配层使用）
+    optional string initial_url = 7;
+
+    // ★新增：接管本地已有浏览器（满足“操作我的浏览器”需求）
+    optional string attach_cdp_url = 8;     // 如 "ws://127.0.0.1:9222/devtools/browser/..."
+
+    // ★v1.5.3 新增：命名上下文（等价一个浏览器标签页）。
+    // 同一客户端可持有多个命名上下文（多会话/多标签并行）；ExecuteAction 经
+    // context_hint["context"]=<context_name> 路由。缺省 = 默认上下文
+    // （保留 v1.5.2 之前「每客户端单上下文、重复初始化替换」语义）。
+    optional string context_name = 9;
+
+    // ★v1.5.7：持久身份名及其严格 JSON 档案。两者同时给出时必须一致；档案
+    // 由引擎解析而非由调用方拆字段，避免 UA/UA-CH/时区出现半套覆盖。
+    optional string profile_id = 10;
+    optional string fingerprint_profile_json = 11;
+
+    // ★v1.5.8（2026-09-23）：互斥键（P1 同站点跨 session 复用）。同键的任务共享
+    // 同一扇窗——后来者复用拥有者的上下文、**忽略 initial_url**（不得把前一个任务
+    // 正在用的页面导航走），动作靠 BrowserContext 互斥量天然串行。缺省 = 不共享
+    // （保持按会话隔离）；拥有者 CloseContext 后该键归还空闲。
+    optional string mutex_key = 12;
+
+    // 只读观察入口：仅续接已存在的命名会话；没有活跃上下文或有效持久绑定时拒绝，
+    // 不创建新 Target，避免把空白页误当作原页面。普通任务保持兼容默认 false。
+    bool require_existing_session = 13;
+}
+
+message InitContextResponse {
+    string target_id = 1;                   // UWS 分配的 CDP Target ID
+    string context_id = 2;                  // BrowserContext ID
+    string session_url = 3;                 // 调试用 DevTools URL（可选）
+    bool ok = 4;
+    string error_reason = 5;               // 若失败，返回具体原因
+    // ★v1.5.6（2026-09-03）：动作前当前页 URL（真实 CDP 会话可用时）。
+    // 协调器据此区分「续页旧会话」与「新开 about:blank」，杜绝目标模式把
+    // 真实页面误报为空白页（react.dev 复现：VLM 幻觉“当前页是京东首页”）。
+    string current_url = 6;
+}
+
+// ★v1.5.3 新增：关闭命名上下文（释放 Target，对应浏览器标签页随之关闭）。
+message CloseContextRequest {
+    string context_name = 1;  // 与 InitContextRequest.context_name 对应；空 = 默认上下文
+}
+
+message CloseContextResponse {
+    bool ok = 1;
+    string error_reason = 2;
+}
+
+message ProxyConfig {
+    string host = 1;
+    int32 port = 2;
+    optional string username = 3;
+    optional string password = 4;
+}
+
+message ViewportConfig {
+    int32 width = 1;                        // 默认 1920
+    int32 height = 2;                       // 默认 1080
+    float device_scale_factor = 3;          // 默认 1.0
+}
+
+message Cookie {
+    string name = 1;
+    string value = 2;
+    optional string domain = 3;
+    optional string path = 4;
+    optional bool http_only = 5;
+    optional bool secure = 6;
+    optional int64 expires = 7;             // Unix timestamp
+}
+
+message BrowserLaunchOverrides {
+    optional int32 max_old_space_size_mb = 1;   // V8 堆上限，默认 4096
+    optional string user_agent = 2;             // 自定义 UA
+    repeated string extra_args = 3;             // 额外 Chromium 启动参数
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ExecuteAction — 原子动作执行
+// ═══════════════════════════════════════════════════════════════════
+
+message ActionIntentRequest {
+    string intent_id = 1;                   // 唯一标识（UUIDv7），重复提交返回缓存
+    string target_semantic = 2;             // 期望语义标签，如 "username_input"
+    // expected_action 支持：click | input | select | focus | hover | scroll | wait | extract
+    // ★v1.5.1 追加：drag（VLM 打码原生拖拽，value="x1,y1,x2,y2" 起点→终点坐标）。
+    string expected_action = 3;
+    optional string value = 4;             // input/select 时的值；drag 时为 "x1,y1,x2,y2"
+    map<string, string> context_hint = 5;   // 可选提示（键值对）
+    int32 timeout_ms = 6;                   // 动作执行 + 局部验证总超时，默认 1500
+    // ★v1.5.5 新增：确定性节点引用（探针 BFS 输入序编号，node_id>0 时跳过语义/
+    // 选择器派发，执行层按同一 BFS 序回查定位器执行；混合指挥 DSL `verb:node:<id>`）。
+    optional int32 node_id = 7;
+}
+
+message ActionResultResponse {
+    string intent_id = 1;
+    bool success = 2;                       // 动作是否成功派发并执行
+    float confidence = 3;                   // 定位置信度
+    LocalVerification local_verification = 4;
+    string decision_trace_id = 5;           // 关联日志 ID
+    string error_reason = 6;
+
+    ContextState context_state = 7;
+    optional string extracted_data = 8;     // extract 动作返回的结构化或纯文本数据
+    optional bool chat_stream_done = 9;     // extract(prefer_sse) 时：聊天 SSE 流是否已结束
+                                            // （FINISHED / loadingFinished；未捕获或进行中 = false）
+
+    // ★v1.5.4 新增（判定层证据链，docs/evidence/research/uws-verdict-evidence-design-2026-08-27.md §6.1）：
+    // 实际命中元素回显（语义/选择器/VLM 定位后的真身；命中元素缺失时为空消息）。
+    HitElement hit_element = 10;
+    // 动作完成后当前页面 URL（确定性证据；会话不支持时为空）。
+    string page_url = 11;
+    // 动作前后 URL 是否变化（点击导航证据；非导航点击 / 会话不支持时 = false）。
+    bool url_changed = 12;
+
+    // ★v1.5.8 新增（新窗口接管，2026-09-22 用户现场反馈批次 P0-1）：
+    // 本次动作打开的新窗口/新标签页 Target ID（未打开时为空）。
+    string new_target_id = 13;
+    // 动作完成后引擎**当前实际作用**的 Target ID：接管成功 = new_target_id；
+    // 未接管（开关关闭/接管失败/无新窗口）= 原 Target。调用方据此决定续页目标。
+    string active_target_id = 14;
+}
+
+// ★v1.5.4 新增：动作实际命中元素的证据快照（selector/rect/text）。
+// 目的：ExecuteAction 不再只给 event_triggered 布尔，调用方可据此区分
+// 「点中精确目标」vs「点中容器/推荐位」（后者=假阳性，URL 不变 + 命中非目标）。
+message HitElement {
+    string selector = 1;                    // CSS 路径（如 div#app > section > button:nth-of-type(2)）
+    string tag = 2;                         // 元素标签（小写）
+    float x = 3;                            // 视口命中点 X（CSS px）
+    float y = 4;                            // 视口命中点 Y（CSS px）
+    float width = 5;                        // 元素宽度（CSS px）
+    float height = 6;                       // 元素高度（CSS px）
+    string text = 7;                        // 可见文本（截断 ≤120）
+}
+
+// 上下文状态枚举（V1.4 统一定义）
+// 注意：值从 0 开始连续编号，与旧版不兼容（proto v2 包名隔离）
+enum ContextState {
+    STABLE = 0;                             // 页面静息，可继续下一动作
+    NAVIGATING = 1;                         // SPA 软路由触发，等待 Network Idle + DOM 静息
+    NAVIGATED = 2;                          // 导航完成（硬导航或 SPA 路由已稳定）
+    NEW_WINDOW_OPENED = 3;                  // 新标签页/窗口打开，需 CDP Attach
+    CHALLENGE_INTERCEPTED = 4;              // WAF/验证码拦截，需外部破解服务介入
+}
+
+message LocalVerification {
+    repeated string observed_changes = 1;   // 如 "aria-expanded:false->true"
+    bool value_updated = 2;
+    bool event_triggered = 3;
+    string probe_status = 4;                // mutated | timeout | interrupted_by_navigation | soft_navigated
+    int32 elapsed_ms = 5;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ReloadKnowledge — 知识库热更新
+// ═══════════════════════════════════════════════════════════════════
+
+message ReloadRequest {
+    string version = 1;                     // 要加载的版本号，如 "v1.4.0"
+    string artifact_uri = 2;               // 可选，不填使用 s3://uws-artifacts/{version}
+    bool dry_run = 3;                       // true = 仅下载校验不切换（预检）
+    bool force = 4;                         // true = 跳过兼容性检查（紧急场景）
+}
+
+message ReloadResponse {
+    bool ok = 1;
+    string active_version = 2;             // 当前生效版本
+    string previous_version = 3;           // 切换前版本
+    int64 switch_time_ms = 4;              // 实际切换耗时（不含下载）
+    string reason = 5;                     // 失败时原因
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HealthCheck & Version
+// ═══════════════════════════════════════════════════════════════════
+
+message Empty {}
+
+message HealthStatus {
+    bool ok = 1;
+    string version = 2;                    // 当前知识库版本
+    int32 active_targets = 3;              // 当前活跃 Target 数
+    int32 max_targets = 4;                 // Target 池上限
+
+    // ★v1.5.0 新增：自动回滚标记（knowledge-versioning §5.2 P0 自动回滚后必须附带回滚标记）。
+    optional bool rolled_back = 5;         // true = 引擎最近一次发生过自动回滚（尚未被人工切换覆盖）
+    optional string rollback_reason = 6;   // 如 "auto_rollback v1.4.0 → v1.3.9"
+}
+
+message KnowledgeVersionResponse {
+    string version = 1;
+    string schema_hash = 2;
+    string model_hash = 3;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CaptureScreenshot — 页面截图（v1.5.1 追加）
+// ═══════════════════════════════════════════════════════════════════
+
+message CaptureScreenshotRequest {
+    string target_id = 1;                   // InitializeContext 返回的 Target ID
+}
+
+message CaptureScreenshotResponse {
+    bytes png = 1;                          // PNG 编码截图
+    int32 width = 2;                        // 视口宽度（CSS px）
+    int32 height = 3;                       // 视口高度（CSS px）
+    string error_reason = 4;                // 失败原因（可空；失败时以 gRPC 错误码为准）
+}
+
+// ★v1.5.5 新增：导出当前页面极简 AXTree（ExportToVLMFormat 文本）。
+// 每行格式：[node_id] tag(role) "text" [offscreen]（含 BFS node_id，供 VLM 指挥官
+// 精确指认；offscreen 标记视口外节点；剔除无语义装饰节点）。
+message ExportPageTreeRequest {
+    string target_id = 1;                   // InitializeContext 返回的 Target ID（空 = 默认上下文）
+}
+
+message ExportPageTreeResponse {
+    string tree = 1;                        // 极简 AXTree 文本（多行，含 node_id）
+}
+
+// ★v1.5.6 新增：导出页面状态
+message ExportStateRequest {
+    string target_id = 1;                   // InitializeContext 返回的 Target ID
+    string target_origin = 2;               // 如 "https://chatgpt.com"，会提取其 LocalStorage/SessionStorage
+}
+
+message StorageOriginContext {
+    string origin = 1;
+    message KVPair {
+        string key = 1;
+        string value = 2;
+    }
+    repeated KVPair local_storage = 2;
+    repeated KVPair session_storage = 3;
+}
+
+message ExportStateResponse {
+    string cookies_json = 1;                // 序列化的 JSON Cookies（使用原生 Network.getAllCookies 列表）
+    repeated StorageOriginContext origins = 2;
+}
+
+// ★v1.5.7：Import 使用结构化明文 Bundle。AES-256-GCM 信封在可信客户端/密钥
+// 存储中解开后再调用本 RPC，避免引擎日志、错误响应或 proto dump 意外携带密钥。
+message StateBundle {
+    string profile_id = 1;
+    string created_at = 2;
+    string cookies_json = 3;
+    repeated StorageOriginContext origins = 4;
+}
+
+message ImportStateRequest {
+    string target_id = 1;
+    StateBundle bundle = 2;
+}
+
+message ImportStateResponse {
+    bool ok = 1;
+    string error_reason = 2;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// gRPC 错误码映射（协调器必须遵循）
+// ═══════════════════════════════════════════════════════════════════
+//
+// | gRPC Status          | UWS 语义                            | 协调器对策                          |
+// |----------------------|-------------------------------------|-------------------------------------|
+// | OK (0)               | 执行通过                            | 前进                                |
+// | NOT_FOUND (5)        | 无可信节点（C < θ_low）             | 不可重试，触发人工接管或任务回退    |
+// | DEADLINE_EXCEEDED (4)| 探针/验证超时                       | Fibonacci 退避重试 1 次             |
+// | ABORTED (10)         | 节点脱离 DOM 或遮罩遮挡             | 立即重试（等待动画帧）              |
+// | FAILED_PRECONDITION (9)| Target 崩溃或 intent_id 冲突      | 重新 InitializeContext 或丢弃流     |
+// |                      | ⚠ 子类：消息以 `vault_unresolved:` 开头 = 凭据直填（`@vault:<名>`）解引用失败 | PAUSE 并透传引擎原话（重试/重建上下文无意义，2026-09-23） |
+// | RESOURCE_EXHAUSTED (8)| LLM 配额耗尽 / Target 池满 / 防乱点熔断 | 降级阻塞，拒绝低置信度动作      |
+// | UNAUTHENTICATED (16) | CHALLENGE_INTERCEPTED（页面真有人机验证）| 调用外部破解服务；失败则人工接管 |
+// |                      | ⚠ 仅当熔断由真实挑战信号触发时才用；连续失败/人工拉起的防乱点熔断走 RESOURCE_EXHAUSTED（2026-09-23 误报修复） |
+// | INVALID_ARGUMENT (3) | 输入校验失败（XSS/长度超限）        | 修复输入后重试                      |

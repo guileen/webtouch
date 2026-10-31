@@ -1,0 +1,25 @@
+build/
+.venv/
+.venv2/
+__pycache__/
+*.py[cod]
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+bin/
+.DS_Store
+# 仓库根的同名产物/软链（必须锚定：未锚定的 `uws-engine` 会匹配任意层级的同名目录，
+# 曾把源码目录 cmd/uws-engine/ 一并忽略，导致引擎入口从未入库）
+/uws-engine
+/uws-engine-bin
+/tier1
+/tier2
+/webtouch
+/uws
+/uws-gateway
+/uws-goal-assets/
+
+# 过程存证截图：含个人屏幕内容，默认不入库（规范见 docs/evidence/README.md）
+docs/evidence/**/*.png
+docs/evidence/**/*.jpg
