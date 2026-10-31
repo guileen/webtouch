@@ -1,6 +1,6 @@
 # WebTouch · 项目交接（webtouch 状态域）
 
-- **开源合格化（2026-10-31 04:33 PDT）**：PR #5、#6 已合，候选 main `dfdb914` 双平台 CI 通过。PR #7 证据及余项见 `docs/evidence/pilots/oss-qualification-2026-10-31.md`；第三方来源授权未闭环；隔离状态变量的冷克隆两项 Go 测试失败，最终 main CI 待验，T-OSS 为 IN_PROGRESS。
+- **开源合格化（2026-10-31 05:18 PDT）**：隔离状态变量的冷克隆 `make ci` 已通过；PR #7 保持 open，模型训练数据及第三方授权义务未闭环，最终 main CI 待验，T-OSS 为 IN_PROGRESS。详见 `docs/evidence/pilots/oss-qualification-2026-10-31.md`。
 
 > **定位（2026-09-23 04:21 起为后续标准）**：本文件是 WebTouch 的**状态域（AOF）**——当前值 + 指针 + 本线不可推断的硬约束，目标 ≤150 行；接力写在这里，不再写进 `labs/handoff.md`。
 > 目标与终局红线 → [`Goals.md`](Goals.md)；任务、依赖、验收 → [`Tasks.md`](Tasks.md)；项目唯一必读入口记忆与结论事实源 → [`GLOBAL.md`](GLOBAL.md)（§4 条目 #101–#129 是本线关键决策）。
