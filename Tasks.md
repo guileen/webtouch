@@ -16,6 +16,12 @@
 
 ## 任务
 
+### `T-40` 匿名 fetch MVP（2026-10-31）
+
+- 已实现 `webtouch fetch` 固定委托 moli、匿名边界、JSON 回执和截图；契约 `docs/cli-fetch-contract-2026-10-31.md`，验收 `TDD-CLI-FETCH-01`。
+- 文件级 Go 测试通过；完整 `go test ./cmd/uws` 因依赖缓存缺失且网络受限未能执行，需在有依赖的环境复验。
+
+
 ### `T-39` 对外名称从 uws 逐步退役到 webtouch（2026-10-31）
 
 - **范围**：用户可见文档与 CLI 主名改为 `webtouch`。`uws` 保留为同一二进制的弃用别名（stderr 提示）。Makefile 正式产物 `webtouch-engine` / `webtouch-gateway` / `webtouch-lease`，旧文件名为软链。README 去掉本树不存在的 `pipeline/`、`learning/`、`benchmarks/`、`archive/`、`docs/evidence/` 链接，快速开始改走 CLI session。Tasks.md 中的个人邮箱脱敏。

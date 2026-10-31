@@ -8,6 +8,8 @@
 
 ## 本线当前值（2026-10-31）
 
+- **匿名 fetch MVP `T-40`（2026-10-31 03:09）**：`webtouch fetch` 通过短进程调用 moli，匿名 JSON / Markdown / 截图；契约 `docs/cli-fetch-contract-2026-10-31.md`。文件级测试通过；完整包测试因依赖缓存缺失和网络限制待复验；沙箱禁止写 `.git`，提交待执行，推送与 PR 因网络失败。
+
 - **名称退役 `T-39`（2026-10-31 09:02）**：对外命令与用户文档主名是 `webtouch`；`uws` 为同一二进制弃用别名（stderr 提示）。正式二进制 `webtouch-engine` / `webtouch-gateway` / `webtouch-lease`，旧名是软链。Go module 仍是 `uws`。状态目录仍是 `~/.uws` 与 `~/.uws-chrome-debug`，不自动迁移。决策 GLOBAL #133，契约 `docs/cli-session-contract-2026-10-31.md` §8。
 - **公开仓本机路径去标识（2026-10-31 08:13，已接到 `T-38` 之后）**：仓内 `/Users/<user>` 绝对路径与用户名目录已改为 `$HOME`、`<HOME>`、`<project-root>` / `<labs-root>`；脚本用 `os.path.expanduser('~')` / `UWS_EPISODES_DIR`、`__file__` 上溯仓库根（`WEBTOUCH_ROOT` 可覆盖）；指纹审计测试从 cwd 上溯 `go.mod`。profile 守卫仍拒绝宿主 `/Users/*`，自检夹具账号为 `example`。
 - **对外 CLI + 本机 session lease（2026-10-31，`T-38` / `TDD-API-14`，DONE）**：对外能力面改为 `webtouch` / `uws session`（create / use / show / list / close，stdout `webtouch.cli.session.v1`）。状态在 `~/.uws/cli-sessions.json`：active → 空闲 10 分钟 idle（可恢复）→ 显式 close 或滑动 24h 关闭；死亡 `owner_pid` 可回收。同账号必须复用已绑定 Profile，`@vault:` 拒绝进 argv 与 lease。Hub 只记账 `hub.channel` 与 `hub.site_conversation_id`。`:8000 /internal/provider/*` 为迁移期：默认带废弃头仍响应；`UWS_PROVIDER_HTTP=410` 时 410 且不进引擎；已知 lease 关闭则 409。契约 [`docs/cli-session-contract-2026-10-31.md`](docs/cli-session-contract-2026-10-31.md)。**未做**：Hub 改 exec、CLI close 关页、流式回写站点对话 id。
