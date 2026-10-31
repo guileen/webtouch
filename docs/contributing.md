@@ -8,19 +8,21 @@
 
 ## 1. 开发环境搭建
 
-### 1.1 前置依赖
-- **Python**: 3.11+（推荐使用 `uv` 管理虚拟环境）
-- **工具链**: `make`, `docker`, `buf` / `protoc`
-- **WASM 编译（可选）**: Emscripten (`emcc` 3.1+)
+### 1.1 前置依赖与初始化
 
-### 1.2 快速启动
+需要 Go 1.25.0、Python 3.11、uv 0.13.6、make、C/C++ 编译器、ripgrep、curl 和 unzip。Linux x86_64 与 macOS x86_64/arm64 可用同一工具链入口：
+
 ```bash
-git clone <repo-url> && cd webtouch
-uv venv && source .venv/bin/activate
-uv pip install -e ".[dev]"
-make proto-gen  # 编译 proto 生成代码
-make test       # 运行基础单元测试
+git clone https://github.com/guileen/webtouch.git
+cd webtouch
+git switch -c my-change origin/main
+uv sync --frozen --group dev --python 3.11
+bash scripts/ci-bootstrap.sh
+export PATH="$PWD/.tools/bin:$PATH"
+make ci
 ```
+
+`make ci` 执行 gofmt 检查、分层与消费方审计、Proto 生成物一致性、全部 Go 包及 Python 基础测试、构建与版本自检。未检出兄弟仓时消费方审计会跳过，不代表跨仓已验。CI 不调用 `make install` 或生产 daemon；真实浏览器、WASM、ONNX 和桌面运行时需另行验证。当前主线有已知阻塞：分层审计发现 gateway 直接依赖 browser；部分 Python 测试引用本仓不存在的 pipeline / benchmarks，收集失败。修复前 CI 不应视为通过。
 
 ---
 
@@ -52,38 +54,18 @@ make test       # 运行基础单元测试
 
 ## 4. 代码风格与规范
 
-- **Python**：使用 `ruff` 进行格式化与 lint，启用 `mypy` 静态类型检查。
-  ```bash
-  make lint   # 运行 ruff check + ruff format --check + mypy
-  make fix    # 自动格式化与修复
-  ```
-- **C++ / WASM**：遵循 Google C++ 规范，使用 `clang-format`。
-- **安全检查**：外部输入字段（`target_semantic`、`value` 等）必须通过白名单校验与长度限制。
-
----
+`make lint` 当前只检查 Go 格式；Ruff、mypy 和 clang-format 尚未接入门禁。外部输入须校验与限制长度。
 
 ## 5. 测试要求
 
-提交改动必须附带自动化测试，并通过以下验证：
-
-```bash
-# 运行单元测试（核心模块覆盖率门禁 ≥ 80%）
-pytest tests/unit --cov=engine --cov=pipeline
-
-# 运行 gRPC 契约与端到端测试
-pytest tests/integration/test_grpc_contract.py
-```
-
-- **在线引擎**：修改必须包含延迟回归测试，确保无内存泄漏。
-- **规则与蒸馏**：必须包含困难负样本与拓扑孤岛评估用例。
+按变更范围编写测试，运行 `make ci`；`make pre-commit` 复用相同检查。未设覆盖率阈值门禁。在线引擎、规则与蒸馏变更还需对应性能和困难负样本验证，详见 [TDD 检查单](tdd-checklist.md)。
 
 ---
 
 ## 6. 分支与提交规范
 
 ### 6.1 分支策略
-- `main`：稳定发布分支，受保护。
-- `develop`：日常主开发分支。
+- 从 `origin/main` 创建工作分支并提交 PR；分支保护以仓库实际设置为准。
 - 特性分支：`feat/<module>-<desc>`（如 `feat/probe-arrow-buffer`）
 - 修复分支：`fix/<module>-<desc>`（如 `fix/async-spa-route`）
 

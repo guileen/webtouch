@@ -41,8 +41,8 @@
 ## 运行命令
 
 ```bash
-make test          # go test ./pkg/... ./cmd/... + pytest tests/{unit,integration,security}
-make pre-commit    # lint + test + gRPC 契约回归
+make test          # go test -count=1 -v ./... + pytest tests/{unit,integration,security}
+make pre-commit    # 与 make ci 相同：检查、测试、构建及版本自检
 make probe-test    # C++ 探针 native 测试（cmake + ctest）
 make bench         # 性能基准（骨架阶段全 skip）
 make collect       # 收集审计（确认所有骨架文件可被收集）
