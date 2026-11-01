@@ -32,6 +32,8 @@
 - 未检出兄弟仓时消费方审计跳过；Ruff、mypy、clang-format 和覆盖率阈值尚非门禁。真实浏览器、WASM、ONNX 与桌面运行时需另验。
 - 在线引擎变更需延迟/内存回归；规则与蒸馏变更需困难负样本与拓扑孤岛评估。
 
+- 匿名 fetch（`T-FETCH`）：`go test ./cmd/uws -run '^TestFetch' -count=1`；覆盖无 moli、Cookie 隔离、重定向和错误边界，契约见 [CLI fetch](cli-fetch-contract-2026-10-31.md)。
+
 ### 0.4 里程碑映射
 
 | 本文档章节 | 模块 | 主要里程碑 | 测试类型 |

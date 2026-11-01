@@ -1,5 +1,7 @@
 # WebTouch · 项目交接（webtouch 状态域）
 
+- **匿名 fetch（2026-11-01 00:10 PDT）**：`T-FETCH` 完成；独立 Go HTTP、无会话及 moli，CLI 包测试和空 PATH 实际读取通过。截图暂不支持；契约见 `docs/cli-fetch-contract-2026-10-31.md`。
+
 - **开源合格化（2026-10-31 05:18 PDT）**：隔离状态变量的冷克隆 `make ci` 已通过；PR #7 保持 open，模型训练数据及第三方授权义务未闭环，最终 main CI 待验，T-OSS 为 IN_PROGRESS。详见 `docs/evidence/pilots/oss-qualification-2026-10-31.md`。
 
 > **定位（2026-09-23 04:21 起为后续标准）**：本文件是 WebTouch 的**状态域（AOF）**——当前值 + 指针 + 本线不可推断的硬约束，目标 ≤150 行；接力写在这里，不再写进 `labs/handoff.md`。

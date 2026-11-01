@@ -16,6 +16,12 @@
 
 ## 任务
 
+### `T-FETCH` 独立匿名读取
+
+- **范围**：Go HTTP 一次性读取公开页面，禁止复用会话及外部 moli；契约见 [`docs/cli-fetch-contract-2026-10-31.md`](docs/cli-fetch-contract-2026-10-31.md)。
+- **验收**：无 moli 的本地 HTTP 夹具覆盖读取、隔离、重定向和错误；CLI 包测试通过。
+- **状态**：`DONE`；`go test ./cmd/uws -count=1` 通过；临时构建在空 PATH 与无效 moli 环境下读取 example.com 返回 HTTP 200。
+
 ### `T-OSS` 开源合格化（2026-10-31）
 
 - **状态**：IN_PROGRESS；A、B 已合入，候选 main 双平台 CI 已绿；C 的凭据/路径扫描、私密报告配置和资产盘点见 [案卷](docs/evidence/pilots/oss-qualification-2026-10-31.md)。
