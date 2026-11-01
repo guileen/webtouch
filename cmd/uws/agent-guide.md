@@ -305,3 +305,5 @@ Go module 路径仍是 `uws`（内部 import，不是对外命令名）。
     不能当常绿 E2E。
 
 深读：.agents/skills/webtouch-skill/SKILL.md（上层入口）与 docs/gateway-contract-2026-08-26.md。
+
+匿名公开页读取：`webtouch fetch --url https://example.com`（HTTP，stdout JSON；不使用登录态）。
